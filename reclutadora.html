@@ -288,6 +288,10 @@
             border-left-color: var(--green-mid);
         }
 
+        .candidata-card.estado-capacitada {
+            border-left-color: var(--blue-400);
+        }
+
         .candidata-card.estado-rechazado {
             border-left-color: var(--red-mid);
         }
@@ -615,6 +619,9 @@
                     <button class="sb-btn" data-filter="aceptado" data-view="listado" id="sb-aceptado">
                         ✅ En Proceso <span class="sb-count green" id="count-aceptado">0</span>
                     </button>
+                    <button class="sb-btn" data-filter="capacitada" data-view="listado" id="sb-capacitada">
+                        ⭐ Aceptadas <span class="sb-count blue" id="count-capacitada">0</span>
+                    </button>
                     <button class="sb-btn" data-view="seguimiento">📅 Seguimiento</button>
                     <button class="sb-btn" data-filter="rechazado" data-view="listado" id="sb-rechazado">
                         ❌ Rechazadas <span class="sb-count red" id="count-rechazado">0</span>
@@ -848,13 +855,13 @@
         //  CONTEOS EN SIDEBAR
         // ═══════════════════════════════════════════════
         function updateSidebarCounts() {
-            const counts = { todos: 0, pendiente: 0, aceptado: 0, rechazado: 0, whatsapp: 0 };
+            const counts = { todos: 0, pendiente: 0, aceptado: 0, rechazado: 0, whatsapp: 0, capacitada: 0 };
             TODAS_CANDIDATAS.forEach(c => {
                 counts.todos++;
                 const e = c.estado || 'pendiente';
                 if (counts[e] !== undefined) counts[e]++;
             });
-            ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp'].forEach(k => {
+            ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp', 'capacitada'].forEach(k => {
                 const el = document.getElementById('count-' + k);
                 if (el) el.textContent = counts[k];
             });
@@ -940,7 +947,10 @@
       ${c.disponibilidad ? '<span>🕐 ' + c.disponibilidad : ''}</span>
     </div>
     <div class="card-footer">
-      <span>${c.timestamp ? '📅 ' + c.timestamp.split(' ')[0] : ''}</span>
+      <div style="display:flex;align-items:center;gap:0.5rem">
+        <span>${c.timestamp ? '📅 ' + c.timestamp.split(' ')[0] : ''}</span>
+        ${estado === 'aceptado' ? `<button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect('${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button>` : ''}
+      </div>
       <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
     </div>
   </div>`;
@@ -971,13 +981,14 @@
             const pill = (txt, color) => `<span style="display:inline-block;background:${color || 'var(--pink-100)'};color:var(--text-h);border-radius:20px;padding:.15rem .65rem;font-size:.78rem;font-weight:700;margin:.15rem">${txt}</span>`;
             const secTitle = (emoji, title) =>
                 `<div class="detail-section-title" style="border-bottom:2px solid var(--pink-100);padding-bottom:.4rem;margin-bottom:.8rem">${emoji} ${title}</div>`;
-            const expBlock = (emoji, label, refs, refTipos, rango, actividades) => {
-                if (!refs && !rango && !actividades) return '';
+            const expBlock = (emoji, label, refs, refTipos, periodo, rango, actividades) => {
+                if (!refs && !rango && !actividades && !periodo) return '';
                 return `<div style="background:var(--blue-50);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.5rem">
                   <div style="font-weight:800;font-size:.85rem;color:var(--blue-400);margin-bottom:.5rem">${emoji} ${label}</div>
                   <div class="detail-grid">
                     ${refs ? di('Referencias', refs) : ''}
                     ${refTipos ? di('Tipo de ref.', refTipos) : ''}
+                    ${periodo ? di('Periodo', periodo) : ''}
                     ${rango ? di('Rango de edad', rango) : ''}
                     ${actividades ? diFull('Actividades', actividades) : ''}
                   </div>
@@ -1090,6 +1101,7 @@
                         t.emoji, t.label,
                         c[`${t.key}_referencias`],
                         c[`${t.key}_ref_tipos`],
+                        c[`${t.key}_periodo`],
                         c[`${t.key}_rango`],
                         c[`${t.key}_actividades`]
                     );
@@ -1152,6 +1164,11 @@
                     <button class="btn btn-success" id="btn-aceptar" ${estado === 'aceptado' ? 'disabled' : ''}>
                     ✅ Sigue el proceso
                     </button>
+                    ${estado === 'aceptado' ? `
+                    <button class="btn btn-primary" id="btn-capacitada">
+                    ⭐ Capacitada
+                    </button>
+                    ` : ''}
                     <button class="btn btn-danger" id="btn-rechazar" ${estado === 'rechazado' ? 'disabled' : ''}>
                     ❌ Rechazada
                     </button>
@@ -1177,6 +1194,10 @@
             };
 
             document.getElementById('btn-aceptar').addEventListener('click', () => updateStatus('aceptado'));
+
+            if (document.getElementById('btn-capacitada')) {
+                document.getElementById('btn-capacitada').addEventListener('click', () => updateStatus('capacitada'));
+            }
 
             document.getElementById('btn-rechazar').addEventListener('click', () => {
                 showJustification('rechazado', '🚫 Motivo del rechazo');
@@ -1295,6 +1316,35 @@
                 showAlert('main-alert', 'Error de conexión.');
                 if (btnConfirm) btnConfirm.disabled = false;
                 initialBtns.forEach(b => b.disabled = false);
+            }
+        }
+
+        async function updateStatusDirect(ciudad, rowIndex, status) {
+            try {
+                const result = await apiPost({
+                    action: 'updateStatus',
+                    ciudad,
+                    rowIndex,
+                    status,
+                    reclutadoraEmail: SESSION.email,
+                    justificacion: 'Aceptada directamente desde el panel de proceso'
+                });
+
+                if (result.success) {
+                    const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == rowIndex && x.ciudad === ciudad);
+                    if (idx >= 0) {
+                        TODAS_CANDIDATAS[idx].estado = status;
+                        TODAS_CANDIDATAS[idx].revisada_por = SESSION.email;
+                        TODAS_CANDIDATAS[idx].justificacion = 'Aceptada directamente desde el panel de proceso';
+                    }
+                    showToast(`Candidata aceptada: ${CONFIG.ESTADO_CONFIG[status].label}`);
+                    updateSidebarCounts();
+                    renderCandidatas();
+                } else {
+                    alert(result.message || 'Error al actualizar estado.');
+                }
+            } catch (err) {
+                alert('Error de conexión.');
             }
         }
 

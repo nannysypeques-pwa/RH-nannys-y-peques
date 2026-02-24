@@ -18,6 +18,7 @@ const CONFIG = {
     ESTADO_CONFIG: {
         'pendiente': { label: 'Pendiente', emoji: '⏳', cls: 'badge-pendiente' },
         'aceptado': { label: 'Sigue el proceso', emoji: '✅', cls: 'badge-aceptado' },
+        'capacitada': { label: 'Aceptadas', emoji: '⭐', cls: 'badge-aceptada' },
         'rechazado': { label: 'Rechazada', emoji: '❌', cls: 'badge-rechazado' },
         'whatsapp': { label: 'WhatsApp', emoji: '💬', cls: 'badge-whatsapp' }
     },

@@ -47,6 +47,10 @@ function buildGenericSub(exp) {
       </div>
     </div>
     <div class="form-group">
+      <label class="form-label" for="${exp.id}_periodo">¿De qué fecha a qué fecha estuviste? <span class="req">*</span></label>
+      <input class="form-control" type="text" id="${exp.id}_periodo" placeholder="Ej. Enero 2022 a Diciembre 2022">
+    </div>
+    <div class="form-group">
       <label class="form-label" for="${exp.id}_rango">¿Con qué rango de edad trabajaste? <span class="req">*</span></label>
       <input class="form-control" type="text" id="${exp.id}_rango" placeholder="Ej. 3-6 años, lactantes, etc.">
     </div>
@@ -450,6 +454,7 @@ function collectFormData() {
         genericData[`exp_${exp.id}`] = checked ? 'Sí' : 'No';
         genericData[`${exp.id}_referencias`] = radio(`${exp.id}_ref`);
         genericData[`${exp.id}_ref_tipos`] = checks(`${exp.id}_ref_tipo`);
+        genericData[`${exp.id}_periodo`] = val(`${exp.id}_periodo`);
         genericData[`${exp.id}_rango`] = val(`${exp.id}_rango`);
         genericData[`${exp.id}_actividades`] = val(`${exp.id}_actividades`);
     });

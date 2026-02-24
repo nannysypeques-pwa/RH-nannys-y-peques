@@ -516,6 +516,11 @@ select.form-control {
     color: #155724;
 }
 
+.badge-aceptada {
+    background: var(--blue-100);
+    color: var(--blue-500);
+}
+
 .badge-rechazado {
     background: var(--red-light);
     color: #721c24;
