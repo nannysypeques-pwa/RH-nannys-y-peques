@@ -796,8 +796,9 @@
         //  INIT
         // ═══════════════════════════════════════════════
         function init() {
-            SESSION = getSession();
-            if (SESSION && SESSION.rol === 'admin') {
+            const sessionData = getSession();
+            if (sessionData && sessionData.user && sessionData.user.rol === 'admin') {
+                SESSION = sessionData.user;
                 showApp();
                 setDatePreset('today');    // Dashboard hoy
                 setDateRecPreset('today'); // Reclutadoras hoy
@@ -826,7 +827,7 @@
                         btn.innerHTML = 'Acceder al panel';
                         return;
                     }
-                    saveSession(result.user);
+                    saveSession(result); // Guarda {success, token, user}
                     SESSION = result.user;
                     showApp();
                     loadDashboard();

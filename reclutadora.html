@@ -762,12 +762,12 @@
         //  INICIO
         // ═══════════════════════════════════════════════
         function init() {
-            SESSION = getSession();
-            if (SESSION && SESSION.email) {
+            const sessionData = getSession();
+            if (sessionData && sessionData.user) {
+                SESSION = sessionData.user;
                 showApp();
                 loadCandidatas();
             }
-            // Si no hay sesión, la pantalla de login ya está visible
         }
 
         // ═══════════════════════════════════════════════
@@ -790,14 +790,12 @@
             try {
                 const result = await apiPost({ action: 'login', email, password: pass });
                 if (result.success) {
-                    if (result.user.rol === 'admin') {
-                        // Admin va a su propio panel
-                        saveSession(result.user);
+                    saveSession(result); // Guarda {success, token, user}
+                    SESSION = result.user;
+                    if (SESSION.rol === 'admin') {
                         window.location.href = 'admin.html';
                         return;
                     }
-                    saveSession(result.user);
-                    SESSION = result.user;
                     document.getElementById('login-form').reset();
                     showApp();
                     loadCandidatas();

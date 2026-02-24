@@ -19,6 +19,12 @@ const show = id => { const e = document.getElementById(id); if (e) e.style.displ
 const hide = id => { const e = document.getElementById(id); if (e) e.style.display = 'none'; };
 const val = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
 const radio = name => { const e = document.querySelector(`[name="${name}"]:checked`); return e ? e.value : ''; };
+const radioLabel = name => {
+    const e = document.querySelector(`[name="${name}"]:checked`);
+    if (!e) return '';
+    const label = document.querySelector(`label[for="${e.id}"]`);
+    return label ? label.textContent.trim() : e.value;
+};
 const checks = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map(e => e.value).join(', ');
 
 // ─── Generar sub-sección genérica de experiencia ─────────────
@@ -400,17 +406,20 @@ function collectFormData() {
     // Zona
     let zonaCiudad = '';
     if (ciudad === 'Puebla') {
-        zonaCiudad = radio('zona_ciudad');
+        zonaCiudad = radio('zona_ciudad'); // Puebla usa valores directos
         if (zonaCiudad === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual');
     } else if (ciudad === 'Querétaro') {
-        zonaCiudad = radio('zona_ciudad_qro');
-        if (zonaCiudad === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_qro');
+        const sel = radio('zona_ciudad_qro');
+        if (sel === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_qro');
+        else zonaCiudad = radioLabel('zona_ciudad_qro');
     } else if (ciudad === 'Xalapa') {
-        zonaCiudad = radio('zona_ciudad_xal');
-        if (zonaCiudad === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_xal');
+        const sel = radio('zona_ciudad_xal');
+        if (sel === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_xal');
+        else zonaCiudad = radioLabel('zona_ciudad_xal');
     } else if (ciudad === 'CDMX') {
-        zonaCiudad = radio('zona_ciudad_cdmx');
-        if (zonaCiudad === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_cdmx');
+        const sel = radio('zona_ciudad_cdmx');
+        if (sel === 'Otra') zonaCiudad = 'Otra: ' + val('zona_otra_cual_cdmx');
+        else zonaCiudad = radioLabel('zona_ciudad_cdmx');
     } else {
         zonaCiudad = val('zona_libre');
     }

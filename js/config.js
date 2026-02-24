@@ -35,22 +35,43 @@ const CONFIG = {
 /** Llama al backend (GET) */
 async function apiGet(params) {
     const url = new URL(CONFIG.APPS_SCRIPT_URL);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
+    const session = getSession();
+    const finalParams = { ...params };
+    if (session && session.token) finalParams.token = session.token;
+
+    Object.entries(finalParams).forEach(([k, v]) => url.searchParams.append(k, v));
     const res = await fetch(url.toString());
-    return res.json();
+    const data = await res.json();
+
+    if (data.authError) handleSessionError(data.message);
+    return data;
 }
 
 /** Llama al backend (POST con form-urlencoded para evitar CORS preflight) */
 async function apiPost(payload) {
     const body = new URLSearchParams();
-    body.append('data', JSON.stringify(payload));
+    const session = getSession();
+    const finalPayload = { ...payload };
+    if (session && session.token) finalPayload.token = session.token;
+
+    body.append('data', JSON.stringify(finalPayload));
 
     const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
     });
-    return res.json();
+    const data = await res.json();
+
+    if (data.authError) handleSessionError(data.message);
+    return data;
+}
+
+/** Maneja errores de autenticación */
+function handleSessionError(msg) {
+    alert('Sesión inválida o expirada: ' + msg);
+    logout();
+    window.location.reload(); // Recargar para forzar pantalla de login
 }
 
 /** Obtiene sesión guardada */
@@ -61,9 +82,16 @@ function getSession() {
     } catch { return null; }
 }
 
-/** Guarda sesión */
-function saveSession(user) {
-    sessionStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(user));
+/** Guarda sesión (incluyendo token) */
+function saveSession(data) {
+    // data puede ser { success: true, token: "...", user: {...} }
+    sessionStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+}
+
+/** Obtiene datos del usuario de la sesión */
+function getSessionUser() {
+    const session = getSession();
+    return session ? session.user : null;
 }
 
 /** Cierra sesión */
