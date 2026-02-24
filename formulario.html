@@ -113,7 +113,8 @@
             border-left: 3px solid var(--pink-200);
             border-radius: 0 var(--r-md) var(--r-md) 0;
             padding: .9rem 1.1rem;
-            margin: .6rem 0 .3rem .8rem
+            margin: .6rem 0 .3rem .8rem;
+            align-self: stretch;
         }
 
         .sub-block.blue {
@@ -646,10 +647,208 @@
                             <div class="check-pill"><input type="checkbox" id="cb-familia" value="familia"><label
                                     for="cb-familia">👨‍👩‍👧 Niñera con mi misma familia (hermanos, primos,
                                     sobrinos)</label></div>
+                            <!-- Sub: Niñera con mi misma familia -->
+                            <div class="sub-block cond" id="sub-familia">
+                                <div class="form-group">
+                                    <label class="form-label" for="familia_edades">¿Edad o edades del peque/s? <span
+                                            class="req">*</span></label>
+                                    <input class="form-control" type="text" id="familia_edades"
+                                        placeholder="Ej. 2 y 5 años">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">¿Te pagaban por cuidarlos? <span
+                                            class="req">*</span></label>
+                                    <div class="radio-group">
+                                        <div class="radio-pill"><input type="radio" name="familia_pago" id="fp-no"
+                                                value="No"><label for="fp-no">❌ No</label></div>
+                                        <div class="radio-pill"><input type="radio" name="familia_pago" id="fp-si"
+                                                value="Sí"><label for="fp-si">✅ Sí</label></div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="check-pill"><input type="checkbox" id="cb-ninera" value="ninera"><label
                                     for="cb-ninera">🏠 Niñera particular</label></div>
+                            <!-- Sub: Niñera particular -->
+                            <div class="sub-block cond" id="sub-ninera">
+                                <div class="form-group">
+                                    <label class="form-label" for="ninera_num_familias">¿Con cuántas familias has
+                                        estado?
+                                        <span class="req">*</span></label>
+                                    <select class="form-control" id="ninera_num_familias" style="max-width:200px">
+                                        <option value="">Selecciona...</option>
+                                        <option value="1">1 familia</option>
+                                        <option value="2">2 familias</option>
+                                        <option value="3">3 familias</option>
+                                        <option value="4">4 familias</option>
+                                        <option value="5">5 o más familias</option>
+                                    </select>
+                                </div>
+                                <div id="familia-blocks-container"></div>
+                            </div>
+
                             <div class="check-pill"><input type="checkbox" id="cb-guarderia" value="guarderia"><label
                                     for="cb-guarderia">🏫 Guarderías y/o estancias</label></div>
+                            <!-- Sub: Guarderías -->
+                            <div class="sub-block blue cond" id="sub-guarderia">
+                                <div class="form-group">
+                                    <label class="form-label">¿Cuentas con referencias? <span
+                                            class="req">*</span></label>
+                                    <div class="radio-group">
+                                        <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-no"
+                                                value="No"><label for="gref-no">❌ No</label></div>
+                                        <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-si"
+                                                value="Sí"><label for="gref-si">✅ Sí</label></div>
+                                    </div>
+                                </div>
+                                <div class="sub-block green cond" id="sub-guarderia-ref-tipo">
+                                    <div class="form-group mb-1">
+                                        <label class="form-label" style="font-size:.82rem">Tipo de referencias:</label>
+                                        <div class="radio-group">
+                                            <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo"
+                                                    id="grt-a" value="Cartas de recomendación"><label for="grt-a">📄
+                                                    Cartas</label></div>
+                                            <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo"
+                                                    id="grt-b" value="Números jefe/supervisor"><label for="grt-b">📞
+                                                    Números</label></div>
+                                            <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo"
+                                                    id="grt-c" value="Otro"><label for="grt-c">🔹 Otro</label></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="guarderia_anio">¿En qué año y cuánto tiempo
+                                        estuviste?
+                                        <span class="req">*</span></label>
+                                    <input class="form-control" type="text" id="guarderia_anio"
+                                        placeholder="Ej. 2019 al 2021 (2 años)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">¿Con qué rango de edad has trabajado? <span
+                                            class="req">*</span>
+                                        <small style="font-weight:500">(puedes seleccionar varios)</small></label>
+                                    <div class="radio-group">
+                                        <div class="check-pill"><input type="checkbox" id="grango-l"
+                                                name="guarderia_rango" value="Lactantes"><label for="grango-l">👶
+                                                Lactantes (0-18 meses)</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="grango-m"
+                                                name="guarderia_rango" value="Maternal"><label for="grango-m">🧒
+                                                Maternal
+                                                (19m-3 años)</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="grango-p"
+                                                name="guarderia_rango" value="Preescolar"><label for="grango-p">🎨
+                                                Preescolar (3+ años)</label></div>
+                                    </div>
+                                </div>
+
+                                <!-- Lactantes -->
+                                <div class="sub-block cond" id="sub-guarderia-lactantes">
+                                    <p
+                                        style="font-weight:800;font-size:.82rem;color:var(--pink-400);margin-bottom:.7rem">
+                                        👶
+                                        Lactantes — detalles</p>
+                                    <div class="form-group"><label class="form-label" for="g_l_edad">Especifica la edad
+                                            de los
+                                            peques <span class="req">*</span></label><input class="form-control"
+                                            type="text" id="g_l_edad" placeholder="Ej. 3 meses a 1 año"></div>
+                                    <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                        <span
+                                            style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                            <span class="req">*</span></span>
+                                        <div class="check-pill"><input type="checkbox" id="g_l_pañal" name="g_l_act"
+                                                value="Cambio de pañal"><label for="g_l_pañal">🧷 Cambio de
+                                                pañal</label>
+                                        </div>
+                                        <div class="check-pill"><input type="checkbox" id="g_l_biberon" name="g_l_act"
+                                                value="Preparé biberón"><label for="g_l_biberon">🍼 Biberón</label>
+                                        </div>
+                                        <div class="check-pill"><input type="checkbox" id="g_l_baño" name="g_l_act"
+                                                value="Bañé peques"><label for="g_l_baño">🛁 Baño</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_l_estim" name="g_l_act"
+                                                value="Actividades de estimulación"><label for="g_l_estim">🎯
+                                                Estimulación</label></div>
+                                    </div>
+                                    <div class="form-group mt-2"><label class="form-label" for="g_l_actividades">¿Cuáles
+                                            eran
+                                            tus actividades principales? <span class="req">*</span></label><textarea
+                                            class="form-control" id="g_l_actividades" rows="2"
+                                            placeholder="Describe tus actividades..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Maternal -->
+                                <div class="sub-block cond" id="sub-guarderia-maternal">
+                                    <p
+                                        style="font-weight:800;font-size:.82rem;color:var(--blue-400);margin-bottom:.7rem">
+                                        🧒
+                                        Maternal — detalles</p>
+                                    <div class="form-group"><label class="form-label" for="g_m_edad">Especifica la edad
+                                            de los
+                                            peques <span class="req">*</span></label><input class="form-control"
+                                            type="text" id="g_m_edad" placeholder="Ej. 1.5 a 3 años"></div>
+                                    <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                        <span
+                                            style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                            <span class="req">*</span></span>
+                                        <div class="check-pill"><input type="checkbox" id="g_m_pañal" name="g_m_act"
+                                                value="Cambio de pañal"><label for="g_m_pañal">🧷 Pañal</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_m_esfin" name="g_m_act"
+                                                value="Control de esfínteres"><label for="g_m_esfin">🚽
+                                                Esfínteres</label>
+                                        </div>
+                                        <div class="check-pill"><input type="checkbox" id="g_m_bib" name="g_m_act"
+                                                value="Preparé biberón"><label for="g_m_bib">🍼 Biberón</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_m_baño" name="g_m_act"
+                                                value="Bañé peques"><label for="g_m_baño">🛁 Baño</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_m_estim" name="g_m_act"
+                                                value="Estimulación"><label for="g_m_estim">🎯 Estimulación</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mt-2"><label class="form-label" for="g_m_actividades">¿Cuáles
+                                            eran
+                                            tus actividades principales? <span class="req">*</span></label><textarea
+                                            class="form-control" id="g_m_actividades" rows="2"
+                                            placeholder="Describe tus actividades..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Preescolar -->
+                                <div class="sub-block cond" id="sub-guarderia-preescolar">
+                                    <p style="font-weight:800;font-size:.82rem;color:#28a745;margin-bottom:.7rem">🎨
+                                        Preescolar
+                                        — detalles</p>
+                                    <div class="form-group"><label class="form-label" for="g_p_edad">Especifica la edad
+                                            de los
+                                            peques <span class="req">*</span></label><input class="form-control"
+                                            type="text" id="g_p_edad" placeholder="Ej. 3 a 5 años"></div>
+                                    <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                        <span
+                                            style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                            <span class="req">*</span></span>
+                                        <div class="check-pill"><input type="checkbox" id="g_p_pañal" name="g_p_act"
+                                                value="Cambio de pañal"><label for="g_p_pañal">🧷 Pañal</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_p_esfin" name="g_p_act"
+                                                value="Control de esfínteres"><label for="g_p_esfin">🚽
+                                                Esfínteres</label>
+                                        </div>
+                                        <div class="check-pill"><input type="checkbox" id="g_p_alim" name="g_p_act"
+                                                value="Preparé alimentos"><label for="g_p_alim">🍽️ Alimentos</label>
+                                        </div>
+                                        <div class="check-pill"><input type="checkbox" id="g_p_baño" name="g_p_act"
+                                                value="Bañé peques"><label for="g_p_baño">🛁 Baño</label></div>
+                                        <div class="check-pill"><input type="checkbox" id="g_p_estim" name="g_p_act"
+                                                value="Estimulación"><label for="g_p_estim">🎯 Estimulación</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mt-2"><label class="form-label" for="g_p_actividades">¿Cuáles
+                                            eran
+                                            tus actividades principales? <span class="req">*</span></label><textarea
+                                            class="form-control" id="g_p_actividades" rows="2"
+                                            placeholder="Describe tus actividades..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="check-pill"><input type="checkbox" id="cb-escuela" value="escuela"><label
                                     for="cb-escuela">📚 Escuelas</label></div>
                             <div class="check-pill"><input type="checkbox" id="cb-servicio_social"
@@ -672,173 +871,7 @@
                         </div>
                     </div>
 
-                    <!-- Sub: Niñera con mi misma familia -->
-                    <div class="sub-block cond" id="sub-familia">
-                        <div class="form-group">
-                            <label class="form-label" for="familia_edades">¿Edad o edades del peque/s? <span
-                                    class="req">*</span></label>
-                            <input class="form-control" type="text" id="familia_edades" placeholder="Ej. 2 y 5 años">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">¿Te pagaban por cuidarlos? <span class="req">*</span></label>
-                            <div class="radio-group">
-                                <div class="radio-pill"><input type="radio" name="familia_pago" id="fp-no"
-                                        value="No"><label for="fp-no">❌ No</label></div>
-                                <div class="radio-pill"><input type="radio" name="familia_pago" id="fp-si"
-                                        value="Sí"><label for="fp-si">✅ Sí</label></div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Sub: Niñera particular -->
-                    <div class="sub-block cond" id="sub-ninera">
-                        <div class="form-group">
-                            <label class="form-label" for="ninera_num_familias">¿Con cuántas familias has estado? <span
-                                    class="req">*</span></label>
-                            <select class="form-control" id="ninera_num_familias" style="max-width:200px">
-                                <option value="">Selecciona...</option>
-                                <option value="1">1 familia</option>
-                                <option value="2">2 familias</option>
-                                <option value="3">3 familias</option>
-                                <option value="4">4 familias</option>
-                                <option value="5">5 o más familias</option>
-                            </select>
-                        </div>
-                        <div id="familia-blocks-container"></div>
-                    </div>
-
-                    <!-- Sub: Guarderías -->
-                    <div class="sub-block blue cond" id="sub-guarderia">
-                        <div class="form-group">
-                            <label class="form-label">¿Cuentas con referencias? <span class="req">*</span></label>
-                            <div class="radio-group">
-                                <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-no"
-                                        value="No"><label for="gref-no">❌ No</label></div>
-                                <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-si"
-                                        value="Sí"><label for="gref-si">✅ Sí</label></div>
-                            </div>
-                        </div>
-                        <div class="sub-block green cond" id="sub-guarderia-ref-tipo">
-                            <div class="form-group mb-1">
-                                <label class="form-label" style="font-size:.82rem">Tipo de referencias:</label>
-                                <div class="radio-group">
-                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-a"
-                                            value="Cartas de recomendación"><label for="grt-a">📄 Cartas</label></div>
-                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-b"
-                                            value="Números jefe/supervisor"><label for="grt-b">📞 Números</label></div>
-                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-c"
-                                            value="Otro"><label for="grt-c">🔹 Otro</label></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="guarderia_anio">¿En qué año y cuánto tiempo estuviste? <span
-                                    class="req">*</span></label>
-                            <input class="form-control" type="text" id="guarderia_anio"
-                                placeholder="Ej. 2019 al 2021 (2 años)">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">¿Con qué rango de edad has trabajado? <span class="req">*</span>
-                                <small style="font-weight:500">(puedes seleccionar varios)</small></label>
-                            <div class="radio-group">
-                                <div class="check-pill"><input type="checkbox" id="grango-l" name="guarderia_rango"
-                                        value="Lactantes"><label for="grango-l">👶 Lactantes (0-18 meses)</label></div>
-                                <div class="check-pill"><input type="checkbox" id="grango-m" name="guarderia_rango"
-                                        value="Maternal"><label for="grango-m">🧒 Maternal (19m-3 años)</label></div>
-                                <div class="check-pill"><input type="checkbox" id="grango-p" name="guarderia_rango"
-                                        value="Preescolar"><label for="grango-p">🎨 Preescolar (3+ años)</label></div>
-                            </div>
-                        </div>
-
-                        <!-- Lactantes -->
-                        <div class="sub-block cond" id="sub-guarderia-lactantes">
-                            <p style="font-weight:800;font-size:.82rem;color:var(--pink-400);margin-bottom:.7rem">👶
-                                Lactantes — detalles</p>
-                            <div class="form-group"><label class="form-label" for="g_l_edad">Especifica la edad de los
-                                    peques <span class="req">*</span></label><input class="form-control" type="text"
-                                    id="g_l_edad" placeholder="Ej. 3 meses a 1 año"></div>
-                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
-                                <span
-                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
-                                    <span class="req">*</span></span>
-                                <div class="check-pill"><input type="checkbox" id="g_l_pañal" name="g_l_act"
-                                        value="Cambio de pañal"><label for="g_l_pañal">🧷 Cambio de pañal</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_l_biberon" name="g_l_act"
-                                        value="Preparé biberón"><label for="g_l_biberon">🍼 Biberón</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_l_baño" name="g_l_act"
-                                        value="Bañé peques"><label for="g_l_baño">🛁 Baño</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_l_estim" name="g_l_act"
-                                        value="Actividades de estimulación"><label for="g_l_estim">🎯
-                                        Estimulación</label></div>
-                            </div>
-                            <div class="form-group mt-2"><label class="form-label" for="g_l_actividades">¿Cuáles eran
-                                    tus actividades principales? <span class="req">*</span></label><textarea
-                                    class="form-control" id="g_l_actividades" rows="2"
-                                    placeholder="Describe tus actividades..."></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Maternal -->
-                        <div class="sub-block cond" id="sub-guarderia-maternal">
-                            <p style="font-weight:800;font-size:.82rem;color:var(--blue-400);margin-bottom:.7rem">🧒
-                                Maternal — detalles</p>
-                            <div class="form-group"><label class="form-label" for="g_m_edad">Especifica la edad de los
-                                    peques <span class="req">*</span></label><input class="form-control" type="text"
-                                    id="g_m_edad" placeholder="Ej. 1.5 a 3 años"></div>
-                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
-                                <span
-                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
-                                    <span class="req">*</span></span>
-                                <div class="check-pill"><input type="checkbox" id="g_m_pañal" name="g_m_act"
-                                        value="Cambio de pañal"><label for="g_m_pañal">🧷 Pañal</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_m_esfin" name="g_m_act"
-                                        value="Control de esfínteres"><label for="g_m_esfin">🚽 Esfínteres</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_m_bib" name="g_m_act"
-                                        value="Preparé biberón"><label for="g_m_bib">🍼 Biberón</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_m_baño" name="g_m_act"
-                                        value="Bañé peques"><label for="g_m_baño">🛁 Baño</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_m_estim" name="g_m_act"
-                                        value="Estimulación"><label for="g_m_estim">🎯 Estimulación</label></div>
-                            </div>
-                            <div class="form-group mt-2"><label class="form-label" for="g_m_actividades">¿Cuáles eran
-                                    tus actividades principales? <span class="req">*</span></label><textarea
-                                    class="form-control" id="g_m_actividades" rows="2"
-                                    placeholder="Describe tus actividades..."></textarea>
-                            </div>
-                        </div>
-
-                        <!-- Preescolar -->
-                        <div class="sub-block cond" id="sub-guarderia-preescolar">
-                            <p style="font-weight:800;font-size:.82rem;color:#28a745;margin-bottom:.7rem">🎨 Preescolar
-                                — detalles</p>
-                            <div class="form-group"><label class="form-label" for="g_p_edad">Especifica la edad de los
-                                    peques <span class="req">*</span></label><input class="form-control" type="text"
-                                    id="g_p_edad" placeholder="Ej. 3 a 5 años"></div>
-                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
-                                <span
-                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
-                                    <span class="req">*</span></span>
-                                <div class="check-pill"><input type="checkbox" id="g_p_pañal" name="g_p_act"
-                                        value="Cambio de pañal"><label for="g_p_pañal">🧷 Pañal</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_p_esfin" name="g_p_act"
-                                        value="Control de esfínteres"><label for="g_p_esfin">🚽 Esfínteres</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_p_alim" name="g_p_act"
-                                        value="Preparé alimentos"><label for="g_p_alim">🍽️ Alimentos</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_p_baño" name="g_p_act"
-                                        value="Bañé peques"><label for="g_p_baño">🛁 Baño</label></div>
-                                <div class="check-pill"><input type="checkbox" id="g_p_estim" name="g_p_act"
-                                        value="Estimulación"><label for="g_p_estim">🎯 Estimulación</label></div>
-                            </div>
-                            <div class="form-group mt-2"><label class="form-label" for="g_p_actividades">¿Cuáles eran
-                                    tus actividades principales? <span class="req">*</span></label><textarea
-                                    class="form-control" id="g_p_actividades" rows="2"
-                                    placeholder="Describe tus actividades..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Contenedor para sub-secciones genéricas generadas por JS -->
-                    <div id="generic-exp-subs"></div>
 
                 </div><!-- /sec5 -->
 

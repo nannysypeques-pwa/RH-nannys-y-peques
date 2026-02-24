@@ -54,7 +54,10 @@ function buildGenericSub(exp) {
       <label class="form-label" for="${exp.id}_actividades">¿Cuáles eran tus actividades principales? <span class="req">*</span></label>
       <textarea class="form-control" id="${exp.id}_actividades" rows="2" placeholder="Describe tus actividades..."></textarea>
     </div>`;
-    document.getElementById('generic-exp-subs').appendChild(d);
+    // Insertar después del pill correspondiente
+    const idCb = exp.id === 'clases_particulares' ? 'cb-clases' : `cb-${exp.id}`;
+    const cbPill = document.getElementById(idCb)?.closest('.check-pill');
+    if (cbPill) cbPill.after(d);
 
     // Reference radio listener
     document.querySelectorAll(`[name="${exp.id}_ref"]`).forEach(el => {
