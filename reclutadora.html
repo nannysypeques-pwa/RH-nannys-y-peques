@@ -919,6 +919,27 @@
             });
         }
 
+        function formatCandidataDate(c) {
+            const diasESP = {
+                'Sun': 'Domingo', 'Mon': 'Lunes', 'Tue': 'Martes', 'Wed': 'Miércoles',
+                'Thu': 'Jueves', 'Fri': 'Viernes', 'Sat': 'Sábado'
+            };
+
+            // 1. Prioridad: Si ya tiene día de sesión asignado
+            if (c.dia_sesion) return `${c.dia_sesion}`;
+
+            // 2. Si no tiene sesión, usar el timestamp pero formateado
+            if (c.timestamp) {
+                const parts = c.timestamp.split(' '); // Ej: "Tue Feb 24 2026..."
+                if (parts.length > 0) {
+                    const diaEng = parts[0];
+                    const diaCompleto = diasESP[diaEng] || diaEng;
+                    return `${diaCompleto}`;
+                }
+            }
+            return '—';
+        }
+
         function candidataCardHtml(c) {
             const estado = c.estado || 'pendiente';
             const cfg = CONFIG.ESTADO_CONFIG[estado] || CONFIG.ESTADO_CONFIG['pendiente'];
@@ -948,7 +969,10 @@
     </div>
     <div class="card-footer">
       <div style="display:flex;align-items:center;gap:0.5rem">
-        <span>${c.timestamp ? '📅 ' + c.timestamp.split(' ')[0] : ''}</span>
+        <span style="display:flex;align-items:center;gap:0.3rem">
+            <span style="font-size:1.1rem">📅</span> 
+            <span style="font-weight:600;color:var(--text-body)">${formatCandidataDate(c)}</span>
+        </span>
         ${estado === 'aceptado' ? `<button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect('${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button>` : ''}
       </div>
       <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
