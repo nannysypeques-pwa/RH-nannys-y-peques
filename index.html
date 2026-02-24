@@ -134,6 +134,114 @@
             display: flex;
             align-items: center;
             gap: 0.4rem;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .info-badge:hover {
+            transform: translateY(-3px);
+            background: #ffffff;
+            border-color: var(--pink-300);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Modal Motivacional */
+        #motivational-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(61, 26, 42, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #motivational-modal .modal-content {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-xl);
+            padding: 2.5rem;
+            max-width: 550px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #motivational-modal .modal-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        #motivational-modal .modal-title {
+            font-size: 1.6rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--pink-400), var(--blue-400));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.2rem;
+        }
+
+        #motivational-modal .modal-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: var(--text-body);
+            margin-bottom: 1.5rem;
+        }
+
+        #motivational-modal .btn-close-modal {
+            background: var(--pink-50);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: var(--r-full);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 1.2rem;
+            right: 1.2rem;
+            transition: all var(--transition);
+        }
+
+        #motivational-modal .btn-close-modal:hover {
+            background: var(--pink-100);
+            color: var(--pink-400);
+            transform: rotate(90deg);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         /* Título de ciudades */
@@ -358,17 +466,17 @@
             <img src="logo-sin-fondo.png" alt="Nannys y Peques" class="hero-logo-main">
             <h1 style="display:none">Nannys y Peques</h1>
             <p class="hero-subtitle">
-                Únete a nuestra familia de niñeras profesionales y transforma la vida de los más pequeños. ¡Te estamos
+                Únete a nuestra familia de niñeras profesionales y transforma la vida de los más peques. ¡Te estamos
                 esperando! 💕
             </p>
         </div>
 
         <!-- Badges informativos -->
         <div class="info-badges">
-            <span class="info-badge">✅ Trabajo flexible</span>
-            <span class="info-badge">💰 Excelente remuneración</span>
-            <span class="info-badge">🎓 Capacitación incluida</span>
-            <span class="info-badge">🤝 Red de apoyo</span>
+            <div class="info-badge" onclick="showMotivation('flexible')">✅ Trabajo flexible</div>
+            <div class="info-badge" onclick="showMotivation('remuneracion')">💰 Excelente remuneración</div>
+            <div class="info-badge" onclick="showMotivation('capacitacion')">🎓 Capacitación incluida</div>
+            <div class="info-badge" onclick="showMotivation('apoyo')">🤝 Red de apoyo</div>
         </div>
 
         <!-- Selección de ciudad -->
@@ -413,8 +521,69 @@
             </a>
         </div>
 
-    </div>
+        <!-- Modal Motivacional -->
+        <div id="motivational-modal">
+            <div class="modal-content">
+                <button class="btn-close-modal" onclick="closeMotivation()">&times;</button>
+                <span id="modal-icon" class="modal-icon">✨</span>
+                <h2 id="modal-title" class="modal-title">Título</h2>
+                <div id="modal-text" class="modal-text">Mensaje</div>
+                <button class="btn btn-primary" onclick="closeMotivation()">¡Deseo postularme! 💖</button>
+            </div>
+        </div>
 
+        <script>
+            const MOTIVATION = {
+                flexible: {
+                    icon: '🌈',
+                    title: 'Tu tiempo es valioso',
+                    text: `<p>En Nannys y Peques entendemos que tu vida también es importante. Queremos que puedas estudiar, crecer, viajar, compartir con tu familia y, al mismo tiempo, ejercer una profesión que transforma vidas.</p>
+                       <p>Aquí tú eliges los horarios que mejor se adapten a tu etapa actual. No creemos en el desgaste, creemos en el equilibrio. Porque una nanny feliz transmite amor, paciencia y energía positiva.</p>
+                       <p><strong>Tu talento merece un espacio donde puedas crecer sin sacrificar lo que amas. 💖</strong></p>`
+                },
+                remuneracion: {
+                    icon: '💎',
+                    title: 'Tu talento merece ser valorado',
+                    text: `<p>Sabemos que el cuidado infantil es una labor que requiere responsabilidad, preparación y entrega emocional. Por eso buscamos ofrecer condiciones justas y acordes al nivel de compromiso que implica acompañar a una familia.</p>
+                       <p>Aquí valoramos tu tiempo, tu disposición y tu profesionalismo. Queremos que te sientas respetada y tranquila, sabiendo que tu trabajo es apreciado.</p>`
+                },
+                capacitacion: {
+                    icon: '📚',
+                    title: 'Profesionaliza tu vocación',
+                    text: `<p>Ser nanny no es improvisar. Es profesionalizar el cuidado.</p>
+                       <p>Recibirás acompañamiento, herramientas y capacitación constante para fortalecer tus habilidades en desarrollo infantil, inteligencia emocional y manejo de situaciones reales.</p>
+                       <p>Queremos que te sientas segura, preparada y orgullosa de tu trabajo. No solo trabajas… te conviertes en una profesional del cuidado.</p>`
+                },
+                apoyo: {
+                    icon: '🤝',
+                    title: 'Nunca estarás sola',
+                    text: `<p>Sabemos que acompañar a una familia implica retos. Por eso formamos una comunidad real.</p>
+                       <p>Tendrás respaldo, asesoría y un equipo que escucha, orienta y acompaña. No eres una empleada aislada, eres parte de una red que comparte valores, experiencias y crecimiento.</p>
+                       <p>Aquí celebramos tus logros, resolvemos juntas los desafíos y construimos un camino profesional sólido.</p>
+                       <p><strong>Cuando entras a Nannys y Peques, entras a una familia. 💕</strong></p>`
+                }
+            };
+
+            function showMotivation(key) {
+                const data = MOTIVATION[key];
+                document.getElementById('modal-icon').textContent = data.icon;
+                document.getElementById('modal-title').textContent = data.title;
+                document.getElementById('modal-text').innerHTML = data.text;
+                document.getElementById('motivational-modal').style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Evitar scroll
+            }
+
+            function closeMotivation() {
+                document.getElementById('motivational-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+
+            // Cerrar al hacer clic fuera del contenido
+            window.onclick = function (event) {
+                const modal = document.getElementById('motivational-modal');
+                if (event.target == modal) closeMotivation();
+            }
+        </script>
 </body>
 
 </html>
