@@ -666,7 +666,11 @@
                 <section id="sec-seguimiento" class="hidden">
                     <div class="section-bar">
                         <h2>📅 Seguimiento de Procesos Manuales</h2>
-                        <button class="btn btn-outline" onclick="loadSeguimientoData()">🔄 Refrescar</button>
+                        <div style="display:flex;gap:1rem">
+                            <button class="btn btn-outline" onclick="loadSeguimientoData()">🔄 Refrescar</button>
+                            <button class="btn btn-outline" style="border-color:var(--red-mid);color:var(--red-mid)"
+                                onclick="confirmClearSeguimiento()">🗑️ Limpiar</button>
+                        </div>
                     </div>
                     <div id="seguimiento-grid" class="candidatas-grid"
                         style="display:grid;grid-template-columns:repeat(auto-fit, minmax(350px, 1fr));gap:1.5rem">
@@ -1541,7 +1545,30 @@
                     showToast('Seguimiento actualizado');
                 }
             } catch (err) {
-                showToast('Error al actualizar');
+                showToast('Error de conexión', 'error');
+            }
+        }
+
+        async function confirmClearSeguimiento() {
+            if (!confirm('⚠️ ¿Estás segura de que quieres limpiar toda la tabla de seguimiento? Esta acción no se puede deshacer.')) return;
+
+            try {
+                // Preloader manual
+                const grid = document.getElementById('seguimiento-grid');
+                grid.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Limpiando...</span></div>';
+
+                const result = await apiPost({ action: 'clearSeguimiento' });
+                if (result.success) {
+                    SEGUIMIENTO_DATA = [];
+                    renderSeguimiento();
+                    showToast('Seguimiento limpiado correctamente');
+                } else {
+                    alert(result.message || 'Error al limpiar.');
+                    loadSeguimientoData();
+                }
+            } catch (err) {
+                alert('Error de conexión.');
+                loadSeguimientoData();
             }
         }
 
