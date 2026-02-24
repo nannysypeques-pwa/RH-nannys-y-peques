@@ -343,6 +343,37 @@
             color: var(--text-muted);
         }
 
+        /* ─── Pestañas de Seguimiento ─── */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--pink-50);
+            padding: 0.4rem;
+            border-radius: var(--r-lg);
+            width: fit-content;
+        }
+
+        .tab-item {
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--r-md);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .tab-item:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--pink-500);
+        }
+
+        .tab-item.active {
+            background: white;
+            color: var(--pink-500);
+            box-shadow: var(--shadow-sm);
+        }
+
         /* ─── Modal de candidata ─── */
         .modal-overlay {
             position: fixed;
@@ -664,7 +695,7 @@
 
                 <!-- SECCIÓN SEGUIMIENTO -->
                 <section id="sec-seguimiento" class="hidden">
-                    <div class="section-bar">
+                    <div class="section-bar" style="margin-bottom:0.5rem">
                         <h2>📅 Seguimiento de Procesos Manuales</h2>
                         <div style="display:flex;gap:1rem">
                             <button class="btn btn-outline" onclick="loadSeguimientoData()">🔄 Refrescar</button>
@@ -672,9 +703,18 @@
                                 onclick="confirmClearSeguimiento()">🗑️ Limpiar</button>
                         </div>
                     </div>
+
+                    <!-- Sistema de Pestañas de Semana -->
+                    <div class="tabs" style="margin-bottom:1.5rem">
+                        <div class="tab-item active" data-week="actual" onclick="switchSeguimientoWeek('actual')">Esta
+                            Semana</div>
+                        <div class="tab-item" data-week="proxima" onclick="switchSeguimientoWeek('proxima')">Próxima
+                            Semana</div>
+                    </div>
+
                     <div id="seguimiento-grid" class="candidatas-grid"
                         style="display:grid;grid-template-columns:repeat(auto-fit, minmax(350px, 1fr));gap:1.5rem">
-                        <!-- 6 Tablas de sesiones -->
+                        <!-- Renderizado por JS -->
                     </div>
                 </section>
 
@@ -715,6 +755,8 @@
         let currentCiudad = 'todas';
         let currentSearch = '';
         let currentCandidataRow = null;
+        let SEGUIMIENTO_DATA = [];
+        let CURRENT_SEGUIMIENTO_WEEK = 'actual';
 
         // ═══════════════════════════════════════════════
         //  INICIO
@@ -1153,15 +1195,26 @@
                 html += `
                 <div id="session-assign-container" style="margin-top:1.5rem;padding:1.2rem;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:var(--r-lg)">
                     <div style="font-weight:800;font-size:.9rem;color:var(--blue-500);margin-bottom:.8rem">📅 Programar Plática Inicial</div>
-                    <div style="display:flex;gap:.7rem;align-items:flex-end">
-                        <div style="flex:1">
-                            <label class="form-label" style="font-size:0.75rem">Selecciona una sesión</label>
-                            <select id="modal-sel-session" class="form-control">
-                                <option value="">-- Elige un día y hora --</option>
-                                ${SESIONES.map(s => `<option value="${s.dia}|${s.hora}">${s.dia} - ${s.hora}</option>`).join('')}
-                            </select>
+                    <div style="display:flex;flex-direction:column;gap:0.8rem">
+                        <div style="display:flex;gap:.7rem;align-items:flex-end">
+                            <div style="flex:1">
+                                <label class="form-label" style="font-size:0.75rem">Selecciona una sesión</label>
+                                <select id="modal-sel-session" class="form-control">
+                                    <option value="">-- Elige un día y hora --</option>
+                                    ${SESIONES.map(s => `<option value="${s.dia}|${s.hora}">${s.dia} - ${s.hora}</option>`).join('')}
+                                </select>
+                            </div>
                         </div>
-                        <button class="btn btn-primary" id="btn-assign-session">Asignar</button>
+                        <div style="display:flex;gap:.7rem;align-items:center">
+                            <div style="flex:1">
+                                <label class="form-label" style="font-size:0.75rem">¿Para qué semana?</label>
+                                <select id="modal-sel-week" class="form-control">
+                                    <option value="actual">Esta semana</option>
+                                    <option value="proxima">Próxima semana</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="btn-assign-session" style="margin-top:1.2rem">Asignar Sesión</button>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -1250,10 +1303,10 @@
                 updateStatus(statusToUpdate, motive);
             });
 
-            // Listener para asignar sesión
             if (c.estado === 'aceptado') {
                 document.getElementById('btn-assign-session').addEventListener('click', async () => {
                     const sel = document.getElementById('modal-sel-session').value;
+                    const week = document.getElementById('modal-sel-week').value;
                     if (!sel) return alert('Selecciona una sesión.');
 
                     const [dia, hora] = sel.split('|');
@@ -1269,7 +1322,8 @@
                             telefono: c.telefono_principal,
                             ciudad: c.ciudad,
                             dia_sesion: dia,
-                            hora_sesion: hora
+                            hora_sesion: hora,
+                            semana: week
                         });
                         if (res.success) {
                             showToast('Sesión asignada correctamente');
@@ -1277,12 +1331,12 @@
                         } else {
                             alert(res.message);
                             btn.disabled = false;
-                            btn.textContent = 'Asignar';
+                            btn.textContent = 'Asignar Sesión';
                         }
                     } catch (err) {
                         alert('Error al asignar sesión.');
                         btn.disabled = false;
-                        btn.textContent = 'Asignar';
+                        btn.textContent = 'Asignar Sesión';
                     }
                 });
             }
@@ -1400,6 +1454,21 @@
             }
         }
 
+        function switchSeguimientoWeek(week) {
+            CURRENT_SEGUIMIENTO_WEEK = week;
+
+            // Actualizar UI de pestañas
+            document.querySelectorAll('#sec-seguimiento .tab-item').forEach(tab => {
+                if (tab.getAttribute('data-week') === week) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            renderSeguimiento();
+        }
+
         // ═══════════════════════════════════════════════
         //  FILTROS DEL SIDEBAR
         // ═══════════════════════════════════════════════
@@ -1461,8 +1530,6 @@
             { dia: 'Sábado', hora: '2:00 PM', color: '#00BCD4' }
         ];
 
-        let SEGUIMIENTO_DATA = [];
-
         async function loadSeguimientoData() {
             const grid = document.getElementById('seguimiento-grid');
             grid.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando seguimiento...</span></div>';
@@ -1488,10 +1555,12 @@
             grid.innerHTML = '';
 
             SESIONES.forEach(s => {
+                // Filtrar candidatas para esta sesión, la ciudad y la semana seleccionada
                 const sessionGirls = SEGUIMIENTO_DATA.filter(d =>
                     d.dia_sesion === s.dia &&
                     d.hora_sesion === s.hora &&
-                    (currentCiudad === 'todas' || d.ciudad === currentCiudad)
+                    (currentCiudad === 'todas' || d.ciudad === currentCiudad) &&
+                    (d.semana || 'actual') === CURRENT_SEGUIMIENTO_WEEK
                 );
 
                 const card = document.createElement('div');
