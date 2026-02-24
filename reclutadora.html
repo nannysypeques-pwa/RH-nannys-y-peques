@@ -1006,6 +1006,7 @@
             html += `<div class="detail-section">${secTitle('🎓', 'Formación Académica')}<div class="detail-grid">`;
             html += di('Grado de estudios', c.grado_estudios);
             html += di('Detalle / Especialidad', c.grado_detalle);
+            if (c.grado_periodo) html += di('Periodo escolar', c.grado_periodo);
             html += di('Actualmente estudiando', c.actualmente_estudiando);
             if (c.actualmente_estudiando === 'Sí' || c.estudiando_que) {
                 html += di('¿Qué estudia?', c.estudiando_que);

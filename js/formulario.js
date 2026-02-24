@@ -375,10 +375,20 @@ function collectFormData() {
     // Grado detalle
     const grado = radio('grado_estudios');
     let gradoDetalle = '';
+    let gradoPeriodo = '';
     if (grado === 'Técnico profesional') gradoDetalle = val('tecnico_cual');
-    else if (grado === 'Licenciatura enfocada al desarrollo infantil') gradoDetalle = val('licenciatura_tipo');
-    else if (grado === 'Otra licenciatura') gradoDetalle = val('otra_licenciatura_cual');
-    else if (grado === 'Maestría') gradoDetalle = val('maestria_cual');
+    else if (grado === 'Licenciatura enfocada al desarrollo infantil') {
+        gradoDetalle = val('licenciatura_tipo');
+        gradoPeriodo = val('licenciatura_periodo');
+    }
+    else if (grado === 'Otra licenciatura') {
+        gradoDetalle = val('otra_licenciatura_cual');
+        gradoPeriodo = val('otra_licenciatura_periodo');
+    }
+    else if (grado === 'Maestría') {
+        gradoDetalle = val('maestria_cual');
+        gradoPeriodo = val('maestria_periodo');
+    }
 
     // Zona
     let zonaCiudad = '';
@@ -451,6 +461,7 @@ function collectFormData() {
         telefono_alternativo: val('tel_alternativo'),
         grado_estudios: grado,
         grado_detalle: gradoDetalle,
+        grado_periodo: gradoPeriodo,
         actualmente_estudiando: grado === 'Actualmente estudiando' ? 'Sí' : 'No',
         estudiando_que: val('estudiando_que'),
         estudiando_semestre: val('estudiando_semestre'),
