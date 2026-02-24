@@ -304,8 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const cb = document.getElementById(`cb-${type === 'clases_particulares' ? 'clases' : type === 'servicio_social' ? 'servicio_social' : type === 'practica_prof' ? 'practica_prof' : type}`);
         if (!cb) return;
         cb.addEventListener('change', () => {
-            const subId = type === 'familia' ? null : `sub-${type}`;
-            if (subId) {
+            const subId = `sub-${type}`;
+            if (document.getElementById(subId)) {
                 if (cb.checked) show(subId);
                 else hide(subId);
             }
@@ -475,6 +475,8 @@ function collectFormData() {
         disponibilidad: disp,
         disponibilidad_horario_detalle: dispDetalle,
         exp_familia_propia: document.getElementById('cb-familia')?.checked ? 'Sí' : 'No',
+        familia_propia_edades: val('familia_edades'),
+        familia_propia_pago: radio('familia_pago'),
         exp_ninera_particular: document.getElementById('cb-ninera')?.checked ? 'Sí' : 'No',
         ninera_num_familias: numFamilias,
         ninera_familias_detalle: familiasDetalle,

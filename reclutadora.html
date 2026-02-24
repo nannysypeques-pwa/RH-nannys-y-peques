@@ -1037,8 +1037,12 @@
             html += `<div class="detail-section">${secTitle('👶', 'Experiencia con Peques')}`;
 
             if (c.exp_familia_propia === 'Sí') {
-                html += `<div style="background:var(--pink-50);border-radius:var(--r-md);padding:.6rem 1rem;margin-bottom:.5rem;font-size:.85rem;font-weight:700;color:var(--pink-500)">
-                  👨‍👩‍👧 Niñera con su propia familia (hermanos, primos, sobrinos)
+                html += `<div style="background:var(--pink-50);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.5rem">
+                  <div style="font-weight:800;font-size:.85rem;color:var(--pink-500);margin-bottom:.5rem">👨‍👩‍👧 Niñera con su propia familia</div>
+                  <div class="detail-grid">
+                    ${di('Edades de peques', c.familia_propia_edades)}
+                    ${di('¿Hubo pago?', c.familia_propia_pago)}
+                  </div>
                 </div>`;
             }
 
