@@ -977,7 +977,7 @@
             <span style="font-size:1.1rem">📅</span> 
             <span style="font-weight:600;color:var(--text-body)">${formatCandidataDate(c)}</span>
         </span>
-        ${estado === 'aceptado' ? `<button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect('${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button>` : ''}
+        ${estado === 'aceptado' ? `<button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect(this, '${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button>` : ''}
       </div>
       <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
     </div>
@@ -1305,12 +1305,20 @@
             if (!currentCandidataRow) return;
 
             const c = currentCandidataRow;
+            const btnCapacitada = document.getElementById('btn-capacitada');
             const btnConfirm = document.getElementById('btn-confirmar-status');
             const btnCancel = document.getElementById('btn-cancelar-status');
             const initialBtns = document.querySelectorAll('#action-buttons-group button');
 
             if (btnConfirm) btnConfirm.disabled = true;
             initialBtns.forEach(b => b.disabled = true);
+
+            // Feedback visual para botón Capacitada si aplica
+            const originalCapacitadaHtml = btnCapacitada ? btnCapacitada.innerHTML : '';
+            if (status === 'capacitada' && btnCapacitada) {
+                btnCapacitada.disabled = true;
+                btnCapacitada.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Guardando...`;
+            }
 
             try {
                 const result = await apiPost({
@@ -1339,15 +1347,27 @@
                     showAlert('main-alert', result.message || 'Error al actualizar estado.');
                     if (btnConfirm) btnConfirm.disabled = false;
                     initialBtns.forEach(b => b.disabled = false);
+                    if (btnCapacitada) {
+                        btnCapacitada.disabled = false;
+                        btnCapacitada.innerHTML = originalCapacitadaHtml;
+                    }
                 }
             } catch (err) {
                 showAlert('main-alert', 'Error de conexión.');
                 if (btnConfirm) btnConfirm.disabled = false;
                 initialBtns.forEach(b => b.disabled = false);
+                if (btnCapacitada) {
+                    btnCapacitada.disabled = false;
+                    btnCapacitada.innerHTML = originalCapacitadaHtml;
+                }
             }
         }
 
-        async function updateStatusDirect(ciudad, rowIndex, status) {
+        async function updateStatusDirect(btn, ciudad, rowIndex, status) {
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner" style="width:12px;height:12px;border-width:2px;border-color:white white white transparent"></span> Cargando...`;
+
             try {
                 const result = await apiPost({
                     action: 'updateStatus',
@@ -1370,9 +1390,13 @@
                     renderCandidatas();
                 } else {
                     alert(result.message || 'Error al actualizar estado.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
                 }
             } catch (err) {
                 alert('Error de conexión.');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
             }
         }
 
