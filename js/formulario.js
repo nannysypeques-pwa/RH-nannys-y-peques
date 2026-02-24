@@ -458,6 +458,7 @@ function collectFormData() {
         en_practicas: radio('en_practicas'),
         practicas_pequenitos: radio('practicas_pequenitos'),
         practicas_donde: val('practicas_donde'),
+        practicas_fechas: val('practicas_fechas'),
         practicas_horarios: val('practicas_horarios'),
         zona_ciudad: zonaCiudad,
         disponibilidad: disp,
