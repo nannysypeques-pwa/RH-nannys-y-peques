@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nannys y Peques · Panel de Reclutadora</title>
+    <link rel="icon" type="image/png" href="logo-sin-fondo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/config.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        /* ─── App layout ─── */
+        #app {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #app.visible {
+            display: flex;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 1.5rem;
+            background: rgba(255, 249, 251, 0.93);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pink-200), var(--blue-200));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--pink-500);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .user-name {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--text-h);
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: capitalize;
+        }
+
+        /* ─── Body layout ─── */
+        .body-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            flex: 1;
+        }
+
+        /* ─── Sidebar ─── */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 1.2rem 0.8rem;
+            position: sticky;
+            top: 63px;
+            height: calc(100vh - 63px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            padding: 0 0.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sb-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: none;
+            background: transparent;
+            border-radius: var(--r-md);
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-body);
+            cursor: pointer;
+            text-align: left;
+            transition: all var(--transition);
+        }
+
+        .sb-btn:hover {
+            background: var(--pink-50);
+            color: var(--pink-400);
+        }
+
+        .sb-btn.active {
+            background: var(--pink-100);
+            color: var(--pink-500);
+        }
+
+        .sb-count {
+            margin-left: auto;
+            background: var(--pink-200);
+            color: var(--pink-600, var(--pink-500));
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0.15rem 0.5rem;
+            border-radius: var(--r-full);
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .sb-count.blue {
+            background: var(--blue-200);
+            color: var(--blue-500);
+        }
+
+        .sb-count.green {
+            background: var(--green-light);
+            color: var(--green-mid);
+        }
+
+        .sb-count.red {
+            background: var(--red-light);
+            color: var(--red-mid);
+        }
+
+        /* ─── Tracking Table ─── */
+        .track-card {
+            background: #fff;
+            border-radius: var(--r-lg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .track-header {
+            padding: 0.8rem 1rem;
+            font-weight: 800;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .track-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        .track-table th {
+            text-align: left;
+            padding: 0.6rem 0.8rem;
+            background: var(--surface);
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .track-table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .track-row-asistio {
+            background-color: #d4edda !important;
+        }
+
+        .sel-agendo {
+            padding: 0.2rem 0.4rem;
+            font-size: 0.75rem;
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            background: #f8f9fa;
+        }
+
+        .sel-agendo.si {
+            background: #28a745;
+            color: #fff;
+            border-color: #218838;
+        }
+
+        /* ─── Main content ─── */
+        .main {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* ─── Barra superior de la sección ─── */
+        .section-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .section-bar h2 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        /* Buscador */
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 320px;
+        }
+
+        .search-box input {
+            padding-left: 2.4rem;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            pointer-events: none;
+            color: var(--text-muted);
+        }
+
+        /* ─── Grid de candidatas ─── */
+        .candidatas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 1rem;
+        }
+
+        .candidata-card {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            padding: 1.2rem;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-left: 5px solid var(--yellow-300);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+        }
+
+        .candidata-card:hover {
+            border-color: var(--pink-200);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-3px);
+        }
+
+        .candidata-card.estado-aceptado {
+            border-left-color: var(--green-mid);
+        }
+
+        .candidata-card.estado-rechazado {
+            border-left-color: var(--red-mid);
+        }
+
+        .candidata-card.estado-whatsapp {
+            border-left-color: var(--teal-mid);
+        }
+
+        .candidata-card.estado-pendiente {
+            border-left-color: var(--yellow-300);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 0.7rem;
+        }
+
+        .card-name {
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: var(--text-h);
+            margin-bottom: 0.15rem;
+        }
+
+        .card-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-dot {
+            color: var(--border);
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.6rem;
+            padding-top: 0.6rem;
+            border-top: 1px solid var(--pink-50);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ─── Modal de candidata ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(61, 26, 42, .4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn .2s ease;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 700px;
+            max-height: 92vh;
+            overflow-y: auto;
+            animation: slideUp .3s ease;
+        }
+
+        .modal-header {
+            padding: 1.2rem 1.5rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 1;
+        }
+
+        .modal-body {
+            padding: 1.2rem 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem 1.3rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-close {
+            background: var(--pink-50);
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition);
+        }
+
+        .btn-close:hover {
+            background: var(--pink-100);
+            color: var(--pink-400);
+        }
+
+        .detail-section {
+            margin-bottom: 1.2rem;
+        }
+
+        .detail-section-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: var(--pink-400);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+        }
+
+        .detail-item {
+            background: var(--pink-50);
+            border-radius: var(--r-md);
+            padding: 0.6rem 0.9rem;
+        }
+
+        .detail-item.full {
+            grid-column: 1 / -1;
+            background: var(--blue-50);
+        }
+
+        .detail-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            margin-bottom: 0.15rem;
+        }
+
+        .detail-value {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-h);
+        }
+
+        .reviewed-note {
+            background: var(--yellow-100);
+            border: 1px solid var(--yellow-200);
+            border-radius: var(--r-md);
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ─── Toast ─── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 1rem 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            animation: slideUp .3s ease;
+            border-left: 4px solid var(--green-mid);
+        }
+
+        /* ─── Responsive ─── */
+        @media(max-width:800px) {
+            .body-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.3rem;
+                padding: 0.8rem;
+            }
+
+            .sidebar-section {
+                margin: 0;
+            }
+
+            .sidebar-title {
+                display: none;
+            }
+
+            .sb-btn {
+                width: auto;
+                padding: 0.45rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media(max-width:500px) {
+            .candidatas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════════════════════════════════════
+     PANTALLA DE LOGIN
+══════════════════════════════════════════ -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">🔐</div>
+            <h1 class="login-title">Acceso reclutadora</h1>
+            <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+
+            <div id="login-alert" class="mb-3"></div>
+
+            <form id="login-form" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Correo electrónico</label>
+                    <input class="form-control" type="email" id="login-email" placeholder="tucorreo@example.com"
+                        required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-pass">Contraseña</label>
+                    <div style="position:relative">
+                        <input class="form-control" type="password" id="login-pass" placeholder="••••••••" required
+                            autocomplete="current-password">
+                        <button type="button" class="btn-close" id="toggle-pass"
+                            style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;font-size:1rem;"
+                            title="Mostrar contraseña">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full mt-2" id="login-btn" style="padding:0.85rem">
+                    Ingresar al panel
+                </button>
+            </form>
+
+            <div style="text-align:center;margin-top:1.5rem">
+                <a href="index.html" style="font-size:0.82rem;color:var(--text-muted)">← Volver al portal</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     PANEL PRINCIPAL (post-login)
+══════════════════════════════════════════ -->
+    <div id="app">
+
+        <!-- Header -->
+        <header class="app-header">
+            <span class="brand"><span class="brand-emoji"></span>Nannys y Peques <span
+                    style="font-size:.65em;font-weight:600;color:var(--text-muted)">· Reclutadora</span></span>
+
+            <div class="header-user">
+                <div class="user-avatar" id="user-initial">R</div>
+                <div class="user-info">
+                    <span class="user-name" id="user-name-display">—</span>
+                    <span class="user-role" id="user-role-display">reclutadora</span>
+                </div>
+                <button class="btn btn-sm btn-outline" id="logout-btn" title="Cerrar sesión">Salir</button>
+            </div>
+        </header>
+
+        <!-- Body -->
+        <div class="body-layout">
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Ciudad</div>
+                    <button class="sb-btn active" data-ciudad="todas" id="sb-ciudad-todas">🌎 Todas</button>
+                    <button class="sb-btn" data-ciudad="Puebla" id="sb-ciudad-puebla">🏛️ Puebla</button>
+                    <button class="sb-btn" data-ciudad="Xalapa" id="sb-ciudad-xalapa">☕ Xalapa</button>
+                    <button class="sb-btn" data-ciudad="Querétaro" id="sb-ciudad-queretaro">🌸 Querétaro</button>
+                    <button class="sb-btn" data-ciudad="CDMX" id="sb-ciudad-cdmx">🌆 CDMX</button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Gestión y Filtros</div>
+                    <button class="sb-btn active" data-filter="todos" data-view="listado" id="sb-todos">
+                        📋 Todas <span class="sb-count" id="count-todos">0</span>
+                    </button>
+                    <button class="sb-btn" data-filter="pendiente" data-view="listado" id="sb-pendiente">
+                        ⏳ Pendientes <span class="sb-count" id="count-pendiente">0</span>
+                    </button>
+                    <button class="sb-btn" data-filter="aceptado" data-view="listado" id="sb-aceptado">
+                        ✅ En Proceso <span class="sb-count green" id="count-aceptado">0</span>
+                    </button>
+                    <button class="sb-btn" data-view="seguimiento">📅 Seguimiento</button>
+                    <button class="sb-btn" data-filter="rechazado" data-view="listado" id="sb-rechazado">
+                        ❌ Rechazadas <span class="sb-count red" id="count-rechazado">0</span>
+                    </button>
+                    <button class="sb-btn" data-filter="whatsapp" data-view="listado" id="sb-whatsapp">
+                        💬 WhatsApp <span class="sb-count teal" id="count-whatsapp">0</span>
+                    </button>
+                </div>
+
+                <div class="sidebar-section" style="margin-top:auto">
+                    <button class="sb-btn" id="refresh-btn">🔄 Actualizar lista</button>
+                </div>
+            </aside>
+
+            <!-- Main -->
+            <main class="main" id="main-panel">
+
+                <!-- SECCIÓN LISTADO -->
+                <section id="sec-listado">
+                    <div class="section-bar">
+                        <h2 id="section-title">Todas las candidatas</h2>
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input class="form-control" type="text" id="search-input"
+                                placeholder="Buscar por nombre o teléfono...">
+                        </div>
+                    </div>
+
+                    <!-- Alerta -->
+                    <div id="main-alert" class="mb-3"></div>
+
+                    <!-- Lista -->
+                    <div id="candidatas-container">
+                        <div class="loading-overlay">
+                            <div class="spinner"></div>
+                            <span>Cargando candidatas...</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN SEGUIMIENTO -->
+                <section id="sec-seguimiento" class="hidden">
+                    <div class="section-bar">
+                        <h2>📅 Seguimiento de Procesos Manuales</h2>
+                        <button class="btn btn-outline" onclick="loadSeguimientoData()">🔄 Refrescar</button>
+                    </div>
+                    <div id="seguimiento-grid" class="candidatas-grid"
+                        style="display:grid;grid-template-columns:repeat(auto-fit, minmax(350px, 1fr));gap:1.5rem">
+                        <!-- 6 Tablas de sesiones -->
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     MODAL DE CANDIDATA
+══════════════════════════════════════════ -->
+    <div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" id="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-nombre" style="font-size:1.1rem;margin:0;">Candidata</h3>
+                    <div id="modal-ciudad-badge" style="margin-top:0.2rem;font-size:0.8rem;color:var(--text-muted)">
+                    </div>
+                </div>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <!-- Botones de acción se añaden aquí -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════
+        //  ESTADO GLOBAL
+        // ═══════════════════════════════════════════════
+        let SESSION = null;
+        let TODAS_CANDIDATAS = [];
+        let currentFilter = 'todos';
+        let currentCiudad = 'todas';
+        let currentSearch = '';
+        let currentCandidataRow = null;
+
+        // ═══════════════════════════════════════════════
+        //  INICIO
+        // ═══════════════════════════════════════════════
+        function init() {
+            SESSION = getSession();
+            if (SESSION && SESSION.email) {
+                showApp();
+                loadCandidatas();
+            }
+            // Si no hay sesión, la pantalla de login ya está visible
+        }
+
+        // ═══════════════════════════════════════════════
+        //  LOGIN
+        // ═══════════════════════════════════════════════
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            if (!email || !pass) {
+                showAlert('login-alert', 'Ingresa tu email y contraseña.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:3px"></span> Verificando...`;
+
+            try {
+                const result = await apiPost({ action: 'login', email, password: pass });
+                if (result.success) {
+                    if (result.user.rol === 'admin') {
+                        // Admin va a su propio panel
+                        saveSession(result.user);
+                        window.location.href = 'admin.html';
+                        return;
+                    }
+                    saveSession(result.user);
+                    SESSION = result.user;
+                    document.getElementById('login-form').reset();
+                    showApp();
+                    loadCandidatas();
+                } else {
+                    showAlert('login-alert', result.message || 'Credenciales incorrectas.');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Ingresar al panel';
+                }
+            } catch (err) {
+                showAlert('login-alert', 'Error de conexión. Intenta de nuevo.');
+                btn.disabled = false;
+                btn.innerHTML = 'Ingresar al panel';
+            }
+        });
+
+        // Toggle contraseña visible
+        document.getElementById('toggle-pass').addEventListener('click', () => {
+            const input = document.getElementById('login-pass');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        });
+
+        // ═══════════════════════════════════════════════
+        //  MOSTRAR APP
+        // ═══════════════════════════════════════════════
+        function showApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            const appEl = document.getElementById('app');
+            appEl.style.display = 'flex';
+            appEl.classList.add('visible');
+            document.getElementById('user-role-display').textContent = SESSION.rol || 'reclutadora';
+            document.getElementById('user-name-display').textContent = SESSION.nombre || 'Reclutadora';
+            document.getElementById('user-initial').textContent = (SESSION.nombre || 'R')[0].toUpperCase();
+
+            // Filtrar ciudades disponibles en el sidebar
+            const sessionCiudades = (SESSION.ciudades || '').split(',').map(s => s.trim()).filter(s => s !== '');
+
+            if (SESSION.rol === 'reclutadora' && sessionCiudades.length > 0) {
+                const cityButtons = document.querySelectorAll('.sb-btn[data-ciudad]');
+                let firstAllowed = null;
+
+                cityButtons.forEach(btn => {
+                    const ciudad = btn.dataset.ciudad;
+                    if (ciudad === 'todas') {
+                        btn.style.display = 'none';
+                    } else if (sessionCiudades.indexOf(ciudad) === -1) {
+                        btn.style.display = 'none';
+                    } else {
+                        if (!firstAllowed) firstAllowed = ciudad;
+                    }
+                });
+
+                // Seleccionar la primera permitida si la actual es 'todas'
+                if (currentCiudad === 'todas' && firstAllowed) {
+                    currentCiudad = firstAllowed;
+                    // Actualizar UI del sidebar
+                    document.querySelectorAll('.sb-btn[data-ciudad]').forEach(b => b.classList.remove('active'));
+                    const targetBtn = document.querySelector(`.sb-btn[data-ciudad="${firstAllowed}"]`);
+                    if (targetBtn) targetBtn.classList.add('active');
+                }
+            }
+        }
+
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            logout();
+            window.location.reload();
+        });
+
+        // ═══════════════════════════════════════════════
+        //  CARGAR CANDIDATAS
+        // ═══════════════════════════════════════════════
+        async function loadCandidatas() {
+            document.getElementById('candidatas-container').innerHTML = `
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <span>Cargando candidatas...</span>
+    </div>`;
+
+            try {
+                const params = { action: 'getCandidatas', rol: SESSION.rol, email: SESSION.email };
+                if (currentCiudad !== 'todas') params.ciudad = currentCiudad;
+
+                const result = await apiGet(params);
+
+                if (result.success) {
+                    TODAS_CANDIDATAS = result.data || [];
+                    updateSidebarCounts();
+                    renderCandidatas();
+                } else {
+                    showAlert('main-alert', result.message || 'Error al cargar candidatas.');
+                    document.getElementById('candidatas-container').innerHTML = '';
+                }
+            } catch (err) {
+                showAlert('main-alert', 'Error de conexión al cargar candidatas.');
+                document.getElementById('candidatas-container').innerHTML = '';
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  CONTEOS EN SIDEBAR
+        // ═══════════════════════════════════════════════
+        function updateSidebarCounts() {
+            const counts = { todos: 0, pendiente: 0, aceptado: 0, rechazado: 0, whatsapp: 0 };
+            TODAS_CANDIDATAS.forEach(c => {
+                counts.todos++;
+                const e = c.estado || 'pendiente';
+                if (counts[e] !== undefined) counts[e]++;
+            });
+            ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp'].forEach(k => {
+                const el = document.getElementById('count-' + k);
+                if (el) el.textContent = counts[k];
+            });
+        }
+
+        // ═══════════════════════════════════════════════
+        //  RENDER DE CANDIDATAS
+        // ═══════════════════════════════════════════════
+        function renderCandidatas() {
+            let list = [...TODAS_CANDIDATAS];
+
+            // Filtro por estado
+            if (currentFilter !== 'todos') {
+                list = list.filter(c => (c.estado || 'pendiente') === currentFilter);
+            }
+
+            // Filtro por ciudad
+            if (currentCiudad !== 'todas') {
+                list = list.filter(c => c.ciudad === currentCiudad);
+            }
+
+            // Búsqueda
+            if (currentSearch.trim()) {
+                const q = currentSearch.toLowerCase();
+                list = list.filter(c =>
+                    (c.nombre || '').toLowerCase().includes(q) ||
+                    (c.telefono || '').includes(q) ||
+                    (c.email || '').toLowerCase().includes(q)
+                );
+            }
+
+            const container = document.getElementById('candidatas-container');
+
+            if (!list.length) {
+                container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-emoji">🔍</div>
+        <p style="font-weight:700;color:var(--text-h)">Sin resultados</p>
+        <p style="font-size:0.85rem">No hay candidatas con estos filtros.</p>
+      </div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="candidatas-grid">
+    ${list.map(c => candidataCardHtml(c)).join('')}
+  </div>`;
+
+            // Click en tarjeta
+            container.querySelectorAll('.candidata-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const idx = card.dataset.idx;
+                    const candidata = TODAS_CANDIDATAS.find(x => x.rowIndex == idx && x.ciudad === card.dataset.ciudad);
+                    if (candidata) openModal(candidata);
+                });
+            });
+        }
+
+        function candidataCardHtml(c) {
+            const estado = c.estado || 'pendiente';
+            const cfg = CONFIG.ESTADO_CONFIG[estado] || CONFIG.ESTADO_CONFIG['pendiente'];
+            const emoji = CONFIG.CIUDAD_EMOJI[c.ciudad] || '📍';
+            const telefono = c.telefono_principal || c.telefono || '—';
+            const zona = c.zona_ciudad ? c.zona_ciudad.split('–')[0].trim() : '';
+
+            return `
+  <div class="candidata-card estado-${estado}"
+       data-idx="${c.rowIndex}" data-ciudad="${c.ciudad}">
+    <div class="card-top">
+      <div>
+        <div class="card-name">${c.nombre || '—'}</div>
+        <div class="card-meta">
+          <span>${c.edad ? c.edad + ' años' : ''}</span>
+          ${c.edad ? '<span class="card-dot">·</span>' : ''}
+          <span>📞 ${telefono}</span>
+        </div>
+      </div>
+      <span class="badge ${cfg.cls}">${cfg.emoji} ${cfg.label}</span>
+    </div>
+    <div style="font-size:0.78rem;color:var(--text-muted);display:flex;gap:0.8rem;flex-wrap:wrap;margin-top:.3rem">
+      <span>${emoji} ${c.ciudad}</span>
+      ${zona ? '<span>📍 ' + zona + '</span>' : ''}
+      ${c.grado_estudios ? '<span>🎓 ' + c.grado_estudios : ''}</span>
+      ${c.disponibilidad ? '<span>🕐 ' + c.disponibilidad : ''}</span>
+    </div>
+    <div class="card-footer">
+      <span>${c.timestamp ? '📅 ' + c.timestamp.split(' ')[0] : ''}</span>
+      <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
+    </div>
+  </div>`;
+        }
+
+        // ═══════════════════════════════════════════════
+        //  MODAL DE CANDIDATA
+        // ═══════════════════════════════════════════════
+        function openModal(c) {
+            currentCandidataRow = c;
+            const estado = c.estado || 'pendiente';
+            const cfg = CONFIG.ESTADO_CONFIG[estado] || CONFIG.ESTADO_CONFIG['pendiente'];
+            const telefono = c.telefono_principal || c.telefono || '—';
+
+            document.getElementById('modal-nombre').textContent = c.nombre || '—';
+            document.getElementById('modal-ciudad-badge').innerHTML =
+                `${CONFIG.CIUDAD_EMOJI[c.ciudad] || '📍'} ${c.ciudad} &nbsp;|&nbsp; <span class="badge ${cfg.cls}">${cfg.emoji} ${cfg.label}</span>`;
+
+            // ── helpers ──
+            const di = (label, value, full) => {
+                if (!value || value === 'undefined') return '';
+                return `<div class="detail-item${full ? ' full' : ''}">
+                  <div class="detail-label">${label}</div>
+                  <div class="detail-value">${value}</div>
+                </div>`;
+            };
+            const diFull = (label, value) => di(label, value, true);
+            const pill = (txt, color) => `<span style="display:inline-block;background:${color || 'var(--pink-100)'};color:var(--text-h);border-radius:20px;padding:.15rem .65rem;font-size:.78rem;font-weight:700;margin:.15rem">${txt}</span>`;
+            const secTitle = (emoji, title) =>
+                `<div class="detail-section-title" style="border-bottom:2px solid var(--pink-100);padding-bottom:.4rem;margin-bottom:.8rem">${emoji} ${title}</div>`;
+            const expBlock = (emoji, label, refs, refTipos, rango, actividades) => {
+                if (!refs && !rango && !actividades) return '';
+                return `<div style="background:var(--blue-50);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.5rem">
+                  <div style="font-weight:800;font-size:.85rem;color:var(--blue-400);margin-bottom:.5rem">${emoji} ${label}</div>
+                  <div class="detail-grid">
+                    ${refs ? di('Referencias', refs) : ''}
+                    ${refTipos ? di('Tipo de ref.', refTipos) : ''}
+                    ${rango ? di('Rango de edad', rango) : ''}
+                    ${actividades ? diFull('Actividades', actividades) : ''}
+                  </div>
+                </div>`;
+            };
+
+            let html = '';
+
+            // Nota si ya fue revisada
+            if (estado !== 'pendiente') {
+                html += `<div class="reviewed-note">
+                  <div>Candidata revisada por: <strong>${c.revisada_por || '—'}</strong> · ${c.fecha_revision || '—'}</div>
+                  ${c.justificacion ? `<div style="margin-top:.4rem;font-style:italic;border-top:1px solid rgba(0,0,0,0.05);padding-top:.4rem">" ${c.justificacion} "</div>` : ''}
+                </div>`;
+            }
+
+            // ═══ 1. DATOS PERSONALES ═══
+            html += `<div class="detail-section">${secTitle('👩', 'Datos Personales')}<div class="detail-grid">`;
+            html += di('Nombre completo', c.nombre);
+            html += di('Edad', c.edad + ' años');
+            html += di('Email', c.email);
+            html += di('Teléfono principal', c.telefono_principal);
+            html += di('Teléfono alternativo', c.telefono_alternativo);
+            html += `</div></div>`;
+            // ═══ 2. FORMACIÓN ═══
+            html += `<div class="detail-section">${secTitle('🎓', 'Formación Académica')}<div class="detail-grid">`;
+            html += di('Grado de estudios', c.grado_estudios);
+            html += di('Detalle / Especialidad', c.grado_detalle);
+            html += di('Actualmente estudiando', c.actualmente_estudiando);
+            if (c.actualmente_estudiando === 'Sí' || c.estudiando_que) {
+                html += di('¿Qué estudia?', c.estudiando_que);
+                html += di('Semestre', c.estudiando_semestre);
+                html += diFull('Horario de clases', c.estudiando_horarios);
+                html += di('¿En prácticas?', c.en_practicas);
+                if (c.en_practicas === 'Sí') {
+                    html += di('Prácticas con peques', c.practicas_pequenitos);
+                    html += di('Dónde practica', c.practicas_donde);
+                    html += di('Horario prácticas', c.practicas_horarios);
+                }
+            }
+            html += `</div></div>`;
+
+            // ═══ 3. UBICACIÓN ═══
+            html += `<div class="detail-section">${secTitle('📍', 'Ubicación')}<div class="detail-grid">`;
+            html += diFull('Zona donde vive', c.zona_ciudad);
+            html += `</div></div>`;
+
+            // ═══ 4. DISPONIBILIDAD ═══
+            html += `<div class="detail-section">${secTitle('📅', 'Disponibilidad')}<div class="detail-grid">`;
+            html += diFull('Disponibilidad', c.disponibilidad);
+            html += di('Horario específico', c.disponibilidad_horario_detalle);
+            html += `</div></div>`;
+
+            // ═══ 5. EXPERIENCIA ═══
+            html += `<div class="detail-section">${secTitle('👶', 'Experiencia con Peques')}`;
+
+            if (c.exp_familia_propia === 'Sí') {
+                html += `<div style="background:var(--pink-50);border-radius:var(--r-md);padding:.6rem 1rem;margin-bottom:.5rem;font-size:.85rem;font-weight:700;color:var(--pink-500)">
+                  👨‍👩‍👧 Niñera con su propia familia (hermanos, primos, sobrinos)
+                </div>`;
+            }
+
+            // Niñera particular — bloques de familia
+            if (c.exp_ninera_particular === 'Sí' || c.ninera_num_familias) {
+                const numFam = parseInt(c.ninera_num_familias) || 0;
+                let famHtml = `<div style="background:var(--pink-50);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.5rem">
+                  <div style="font-weight:800;font-size:.85rem;color:var(--pink-500);margin-bottom:.6rem">🏠 Niñera Particular — ${numFam} familia${numFam !== 1 ? 's' : ''}</div>`;
+
+                if (c.ninera_familias_detalle) {
+                    // El detalle viene como texto plano separado por '\n\n---' por familia
+                    famHtml += `<div style="font-size:.83rem;line-height:1.7;color:var(--text-body);white-space:pre-wrap">${c.ninera_familias_detalle}</div>`;
+                }
+                famHtml += `</div>`;
+                html += famHtml;
+            }
+
+            // Guarderías
+            if (c.exp_guarderia === 'Sí' || c.guarderia_referencias) {
+                html += `<div style="background:var(--blue-50);border-radius:var(--r-md);padding:.8rem 1rem;margin-bottom:.5rem">
+                  <div style="font-weight:800;font-size:.85rem;color:var(--blue-400);margin-bottom:.5rem">🏫 Guarderías y/o Estancias</div>
+                  <div class="detail-grid">
+                    ${di('Referencias', c.guarderia_referencias)}
+                    ${di('Tipo de ref.', c.guarderia_tipo_referencias)}
+                    ${di('Período', c.guarderia_anio_tiempo)}
+                    ${di('Rangos de edad', c.guarderia_rangos_edad)}
+                    ${c.guarderia_detalles ? diFull('Actividades por rango', c.guarderia_detalles) : ''}
+                  </div>
+                </div>`;
+            }
+
+            // Tipos genéricos de experiencia
+            const expTypes = [
+                { key: 'escuela', emoji: '📚', label: 'Escuelas' },
+                { key: 'servicio_social', emoji: '🤝', label: 'Servicio Social' },
+                { key: 'practica_prof', emoji: '📝', label: 'Práctica Profesional' },
+                { key: 'voluntariado', emoji: '💚', label: 'Voluntariado' },
+                { key: 'campamentos', emoji: '⛺', label: 'Campamentos / Cursos de Verano' },
+                { key: 'clases_particulares', emoji: '📖', label: 'Clases Particulares / Club de Tareas' },
+                { key: 'hospitalaria', emoji: '🏥', label: 'Área Hospitalaria / Rehabilitación' },
+            ];
+            expTypes.forEach(t => {
+                if (c[`exp_${t.key}`] === 'Sí' || c[`${t.key}_referencias`]) {
+                    html += expBlock(
+                        t.emoji, t.label,
+                        c[`${t.key}_referencias`],
+                        c[`${t.key}_ref_tipos`],
+                        c[`${t.key}_rango`],
+                        c[`${t.key}_actividades`]
+                    );
+                }
+            });
+
+            html += `</div>`; // /detail-section experiencia
+
+            // ═══ 6. ASPIRACIONES ═══
+            html += `<div class="detail-section">${secTitle('🌟', 'Aspiraciones')}<div class="detail-grid">`;
+            html += di('Tiempo deseado', c.tiempo_trabajo);
+            html += di('¿Trabajó en otra agencia?', c.otras_agencias);
+            if (c.otras_agencias === 'Sí') {
+                html += di('Nombre de agencia', c.nombre_agencia);
+                html += di('Referencias de agencia', c.referencias_agencia);
+            }
+            html += `</div></div>`;
+
+            // ═══ ÁREA DE ASIGNACIÓN DE SESIÓN (SOLO SI YA ESTÁ ACEPTADA) ═══
+            if (c.estado === 'aceptado') {
+                html += `
+                <div id="session-assign-container" style="margin-top:1.5rem;padding:1.2rem;background:var(--blue-50);border:1px solid var(--blue-200);border-radius:var(--r-lg)">
+                    <div style="font-weight:800;font-size:.9rem;color:var(--blue-500);margin-bottom:.8rem">📅 Programar Plática Inicial</div>
+                    <div style="display:flex;gap:.7rem;align-items:flex-end">
+                        <div style="flex:1">
+                            <label class="form-label" style="font-size:0.75rem">Selecciona una sesión</label>
+                            <select id="modal-sel-session" class="form-control">
+                                <option value="">-- Elige un día y hora --</option>
+                                ${SESIONES.map(s => `<option value="${s.dia}|${s.hora}">${s.dia} - ${s.hora}</option>`).join('')}
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-assign-session">Asignar</button>
+                    </div>
+                </div>
+                `;
+            }
+
+            // ═══ ÁREA DE JUSTIFICACIÓN (OCULTA POR DEFECTO) ═══
+            html += `
+            <div id="justificacion-container" class="hidden" style="margin-top:1.5rem;padding:1.2rem;background:var(--yellow-50);border:2px dashed var(--yellow-400);border-radius:var(--r-lg);animation:slideUp .3s ease">
+                <div style="font-weight:800;font-size:.9rem;color:#856404;margin-bottom:.6rem" id="justificacion-titulo">Justificación del rechazo</div>
+                <textarea id="justificacion-input" class="form-control" rows="3" placeholder="Escribe aquí el motivo detallado (obligatorio)..." style="background:#fff"></textarea>
+                <div style="display:flex;gap:.7rem;margin-top:1rem">
+                    <button class="btn btn-primary" id="btn-confirmar-status" style="flex:1">Confirmar envío</button>
+                    <button class="btn btn-outline" id="btn-cancelar-status">Cancelar</button>
+                </div>
+            </div>
+            `;
+
+            // Info de ingreso
+            if (c.timestamp) {
+                html += `<div style="text-align:right;font-size:.75rem;color:var(--text-muted);margin-top:1rem">📅 Postulación recibida: ${c.timestamp}</div>`;
+            }
+
+            document.getElementById('modal-body').innerHTML = html;
+
+            const footerActionBtns = document.getElementById('modal-footer');
+            footerActionBtns.innerHTML = `
+                <div id="action-buttons-group" style="display:flex;gap:0.7rem;flex-wrap:wrap;width:100%">
+                    <button class="btn btn-success" id="btn-aceptar" ${estado === 'aceptado' ? 'disabled' : ''}>
+                    ✅ Sigue el proceso
+                    </button>
+                    <button class="btn btn-danger" id="btn-rechazar" ${estado === 'rechazado' ? 'disabled' : ''}>
+                    ❌ Rechazada
+                    </button>
+                    <button class="btn btn-secondary" id="btn-whatsapp" ${estado === 'whatsapp' ? 'disabled' : ''}>
+                    💬 Grupo de WhatsApp
+                    </button>
+                </div>
+            `;
+
+            const justiContainer = document.getElementById('justificacion-container');
+            const actionGroup = document.getElementById('action-buttons-group');
+            const justiInput = document.getElementById('justificacion-input');
+            const justiTitle = document.getElementById('justificacion-titulo');
+            let statusToUpdate = '';
+
+            const showJustification = (status, title) => {
+                statusToUpdate = status;
+                justiTitle.textContent = title;
+                justiInput.value = '';
+                justiContainer.classList.remove('hidden');
+                actionGroup.classList.add('hidden');
+                justiInput.focus();
+            };
+
+            document.getElementById('btn-aceptar').addEventListener('click', () => updateStatus('aceptado'));
+
+            document.getElementById('btn-rechazar').addEventListener('click', () => {
+                showJustification('rechazado', '🚫 Motivo del rechazo');
+            });
+
+            document.getElementById('btn-whatsapp').addEventListener('click', () => {
+                showJustification('whatsapp', '💬 Motivo para pasar a Grupo de WhatsApp');
+            });
+
+            document.getElementById('btn-cancelar-status').addEventListener('click', () => {
+                justiContainer.classList.add('hidden');
+                actionGroup.classList.remove('hidden');
+            });
+
+            document.getElementById('btn-confirmar-status').addEventListener('click', () => {
+                const motive = justiInput.value.trim();
+                if (!motive) {
+                    alert('La justificación es obligatoria.');
+                    justiInput.style.borderColor = 'var(--red-mid)';
+                    return;
+                }
+                updateStatus(statusToUpdate, motive);
+            });
+
+            // Listener para asignar sesión
+            if (c.estado === 'aceptado') {
+                document.getElementById('btn-assign-session').addEventListener('click', async () => {
+                    const sel = document.getElementById('modal-sel-session').value;
+                    if (!sel) return alert('Selecciona una sesión.');
+
+                    const [dia, hora] = sel.split('|');
+                    const btn = document.getElementById('btn-assign-session');
+                    btn.disabled = true;
+                    btn.textContent = '...';
+
+                    try {
+                        const res = await apiPost({
+                            action: 'assignSession',
+                            email: c.email,
+                            nombre: c.nombre,
+                            telefono: c.telefono_principal,
+                            ciudad: c.ciudad,
+                            dia_sesion: dia,
+                            hora_sesion: hora
+                        });
+                        if (res.success) {
+                            showToast('Sesión asignada correctamente');
+                            document.getElementById('modal-overlay').classList.add('hidden');
+                        } else {
+                            alert(res.message);
+                            btn.disabled = false;
+                            btn.textContent = 'Asignar';
+                        }
+                    } catch (err) {
+                        alert('Error al asignar sesión.');
+                        btn.disabled = false;
+                        btn.textContent = 'Asignar';
+                    }
+                });
+            }
+
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        }
+
+        function closeModal(e) {
+            if (e.target === document.getElementById('modal-overlay') || e.currentTarget === document.getElementById('modal-overlay')) {
+                if (e.target === document.getElementById('modal-overlay')) {
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                }
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  ACTUALIZAR ESTADO
+        // ═══════════════════════════════════════════════
+        async function updateStatus(status, justificacion = '') {
+            if (!currentCandidataRow) return;
+
+            const c = currentCandidataRow;
+            const btnConfirm = document.getElementById('btn-confirmar-status');
+            const btnCancel = document.getElementById('btn-cancelar-status');
+            const initialBtns = document.querySelectorAll('#action-buttons-group button');
+
+            if (btnConfirm) btnConfirm.disabled = true;
+            initialBtns.forEach(b => b.disabled = true);
+
+            try {
+                const result = await apiPost({
+                    action: 'updateStatus',
+                    ciudad: c.ciudad,
+                    rowIndex: c.rowIndex,
+                    status,
+                    reclutadoraEmail: SESSION.email,
+                    justificacion
+                });
+
+                if (result.success) {
+                    // Actualizar en memoria
+                    const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
+                    if (idx >= 0) {
+                        TODAS_CANDIDATAS[idx].estado = status;
+                        TODAS_CANDIDATAS[idx].revisada_por = SESSION.email;
+                        TODAS_CANDIDATAS[idx].justificacion = justificacion;
+                    }
+
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    showToast(`Estado actualizado: ${CONFIG.ESTADO_CONFIG[status].label}`);
+                    updateSidebarCounts();
+                    renderCandidatas();
+                } else {
+                    showAlert('main-alert', result.message || 'Error al actualizar estado.');
+                    if (btnConfirm) btnConfirm.disabled = false;
+                    initialBtns.forEach(b => b.disabled = false);
+                }
+            } catch (err) {
+                showAlert('main-alert', 'Error de conexión.');
+                if (btnConfirm) btnConfirm.disabled = false;
+                initialBtns.forEach(b => b.disabled = false);
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  FILTROS DEL SIDEBAR
+        // ═══════════════════════════════════════════════
+        document.querySelectorAll('.sb-btn[data-filter]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sb-btn[data-filter]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderCandidatas();
+            });
+        });
+
+        document.querySelectorAll('.sb-btn[data-ciudad]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sb-btn[data-ciudad]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCiudad = btn.dataset.ciudad;
+                if (document.getElementById('sec-seguimiento').classList.contains('hidden')) {
+                    loadCandidatas();
+                } else {
+                    loadSeguimientoData();
+                }
+            });
+        });
+
+        // Navegación entre vistas
+        document.querySelectorAll('.sb-btn[data-view]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sb-btn[data-view]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const view = btn.dataset.view;
+                if (view === 'seguimiento') {
+                    document.getElementById('sec-listado').classList.add('hidden');
+                    document.getElementById('sec-seguimiento').classList.remove('hidden');
+                    loadSeguimientoData();
+                } else {
+                    document.getElementById('sec-seguimiento').classList.add('hidden');
+                    document.getElementById('sec-listado').classList.remove('hidden');
+                    if (btn.dataset.filter) {
+                        currentFilter = btn.dataset.filter;
+                        const cfg = CONFIG.ESTADO_CONFIG[currentFilter];
+                        document.getElementById('section-title').textContent = cfg ? cfg.label : 'Todas las candidatas';
+                    }
+                    renderCandidatas();
+                }
+            });
+        });
+
+        // ═══════════════════════════════════════════════
+        //  MÓDULO DE SEGUIMIENTO
+        // ═══════════════════════════════════════════════
+        const SESIONES = [
+            { dia: 'Lunes', hora: '9:30 AM', color: '#FF8FAB' },
+            { dia: 'Martes', hora: '4:30 PM', color: '#4CAF50' },
+            { dia: 'Miércoles', hora: '9:30 AM', color: '#2196F3' },
+            { dia: 'Jueves', hora: '4:30 PM', color: '#FF9800' },
+            { dia: 'Viernes', hora: '9:30 AM', color: '#E91E63' },
+            { dia: 'Sábado', hora: '2:00 PM', color: '#00BCD4' }
+        ];
+
+        let SEGUIMIENTO_DATA = [];
+
+        async function loadSeguimientoData() {
+            const grid = document.getElementById('seguimiento-grid');
+            grid.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando seguimiento...</span></div>';
+
+            try {
+                const result = await apiGet({
+                    action: 'getSeguimientoData',
+                    ciudad: currentCiudad !== 'todas' ? currentCiudad : ''
+                });
+                if (result.success) {
+                    SEGUIMIENTO_DATA = result.data || [];
+                    renderSeguimiento();
+                } else {
+                    showAlert('main-alert', 'Error al cargar seguimiento.');
+                }
+            } catch (err) {
+                showAlert('main-alert', 'Error de conexión.');
+            }
+        }
+
+        function renderSeguimiento() {
+            const grid = document.getElementById('seguimiento-grid');
+            grid.innerHTML = '';
+
+            SESIONES.forEach(s => {
+                const sessionGirls = SEGUIMIENTO_DATA.filter(d =>
+                    d.dia_sesion === s.dia &&
+                    d.hora_sesion === s.hora &&
+                    (currentCiudad === 'todas' || d.ciudad === currentCiudad)
+                );
+
+                const card = document.createElement('div');
+                card.className = 'track-card';
+
+                let html = `
+                    <div class="track-header" style="background:${s.color}">
+                        <span>${s.dia}</span>
+                        <span>${s.hora}</span>
+                    </div>
+                    <table class="track-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th style="width:100px">WhatsApp</th>
+                                <th style="width:80px">Agendó</th>
+                                <th style="width:40px">E.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                if (sessionGirls.length === 0) {
+                    html += `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem">Sin candidatas</td></tr>`;
+                } else {
+                    sessionGirls.forEach(g => {
+                        const asistioCls = g.asistencia_platica === 'Sí' ? 'track-row-asistio' : '';
+                        const waLink = `https://wa.me/${formatWAPhone(g.telefono)}?text=${encodeURIComponent(CONFIG.WHATSAPP_MSG)}`;
+
+                        html += `
+                            <tr class="${asistioCls}">
+                                <td style="font-weight:700">
+                                    <div style="cursor:pointer" onclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')">
+                                        ${g.nombre}
+                                        <div style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">${g.ciudad}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="${waLink}" target="_blank" class="badge badge-whatsapp" style="text-decoration:none">💬 Chat</a>
+                                </td>
+                                <td>
+                                    <select class="sel-agendo ${g.agendo_entrevista === 'Sí' ? 'si' : ''}" onchange="updateTrackField('${g.email}', 'agendo_entrevista', this.value)">
+                                        <option value="-" ${g.agendo_entrevista === '-' ? 'selected' : ''}>-</option>
+                                        <option value="Sí" ${g.agendo_entrevista === 'Sí' ? 'selected' : ''}>Sí</option>
+                                    </select>
+                                </td>
+                                <td style="text-align:center">
+                                    <input type="checkbox" ${g.asistencia_entrevista === 'Sí' ? 'checked' : ''} onchange="updateTrackField('${g.email}', 'asistencia_entrevista', this.checked ? 'Sí' : 'No')">
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                html += `</tbody></table>`;
+                card.innerHTML = html;
+                grid.appendChild(card);
+            });
+        }
+
+        async function toggleAsistencia(email, val) {
+            updateTrackField(email, 'asistencia_platica', val);
+        }
+
+        async function updateTrackField(email, field, value) {
+            try {
+                const result = await apiPost({
+                    action: 'updateSeguimiento',
+                    email, field, value
+                });
+                if (result.success) {
+                    const idx = SEGUIMIENTO_DATA.findIndex(d => d.email === email);
+                    if (idx >= 0) SEGUIMIENTO_DATA[idx][field] = value;
+                    renderSeguimiento();
+                    showToast('Seguimiento actualizado');
+                }
+            } catch (err) {
+                showToast('Error al actualizar');
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  TOAST
+        // ═══════════════════════════════════════════════
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span>✅</span><span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ─── Arranque ─────────────────────────────────
+        init();
+    </script>
+</body>
+
+</html>

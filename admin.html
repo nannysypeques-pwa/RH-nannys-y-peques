@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nannys y Peques · Panel de Administración</title>
+    <link rel="icon" type="image/png" href="logo-sin-fondo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/config.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        /* App layout */
+        #app {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        #app.visible {
+            display: flex;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.9rem 2rem;
+            background: rgba(255, 249, 251, 0.93);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue-200), var(--pink-200));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--blue-500);
+        }
+
+        .user-name-disp {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--text-h);
+        }
+
+        .user-role-disp {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Nav tabs del dashboard */
+        .admin-nav {
+            display: flex;
+            gap: 0.3rem;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.6rem 2rem 0;
+        }
+
+        .nav-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.2rem;
+            border: none;
+            background: transparent;
+            border-bottom: 3px solid transparent;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .nav-tab:hover {
+            color: var(--text-body);
+        }
+
+        .nav-tab.active {
+            color: var(--pink-500);
+            border-bottom-color: var(--pink-400);
+        }
+
+        /* Contenido del panel */
+        .panel-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ─── KPIs ─── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.4rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .kpi-card.total::before {
+            background: linear-gradient(90deg, var(--pink-200), var(--pink-400));
+        }
+
+        .kpi-card.pend::before {
+            background: linear-gradient(90deg, var(--yellow-200), var(--yellow-300));
+        }
+
+        .kpi-card.acep::before {
+            background: linear-gradient(90deg, #5dca7c, #28a745);
+        }
+
+        .kpi-card.rech::before {
+            background: linear-gradient(90deg, #f77, #dc3545);
+        }
+
+        .kpi-card.wapp::before {
+            background: linear-gradient(90deg, #7de8f5, #17a2b8);
+        }
+
+        .kpi-icon {
+            font-size: 2rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .kpi-val {
+            font-size: 2.6rem;
+            font-weight: 900;
+            color: var(--text-h);
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+
+        .kpi-lbl {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* ─── Secciones ─── */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-h);
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* ─── Fila de gráfica + por ciudad ─── */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+        }
+
+        /* Tabla por ciudad */
+        .city-table-card {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+        }
+
+        .city-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--pink-50);
+        }
+
+        .city-row:last-child {
+            border-bottom: none;
+        }
+
+        .city-row-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .city-mini-bars {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+        }
+
+        .city-bar {
+            height: 6px;
+            border-radius: var(--r-full);
+            transition: width var(--transition);
+        }
+
+        .city-bar-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-muted);
+        }
+
+        /* ─── Tabla de reclutadoras ─── */
+        .rec-table-card {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--r-md);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            background: linear-gradient(135deg, var(--pink-50), var(--blue-50));
+        }
+
+        thead th {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--pink-50);
+            transition: background var(--transition);
+        }
+
+        tbody tr:hover {
+            background: var(--pink-50);
+        }
+
+        tbody td {
+            padding: 0.8rem 1rem;
+            font-size: 0.88rem;
+            color: var(--text-body);
+        }
+
+        .conversion-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .conversion-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: var(--pink-100);
+            border-radius: var(--r-full);
+            overflow: hidden;
+        }
+
+        .conversion-bar-fill {
+            height: 100%;
+            border-radius: var(--r-full);
+            background: linear-gradient(90deg, var(--pink-300), var(--green-mid));
+            transition: width var(--transition);
+        }
+
+        /* ─── Modal crear usuario ─── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(61, 26, 42, .4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn .2s ease;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp .3s ease;
+        }
+
+        .modal-header {
+            padding: 1.2rem 1.5rem 0.8rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 1.2rem 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem 1.3rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.7rem;
+            justify-content: flex-end;
+        }
+
+        .btn-close {
+            background: var(--pink-50);
+            border: none;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition);
+        }
+
+        .btn-close:hover {
+            background: var(--pink-100);
+            color: var(--pink-400);
+        }
+
+        /* ─── Toast ─── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            background: var(--surface);
+            border-radius: var(--r-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 1rem 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            animation: slideUp .3s ease;
+            border-left: 4px solid var(--green-mid);
+        }
+
+        /* ─── Filter Bar ─── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--surface);
+            padding: 1rem 1.5rem;
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-presets {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-filter {
+            padding: 0.45rem 0.9rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .btn-filter:hover {
+            border-color: var(--pink-300);
+            color: var(--pink-500);
+        }
+
+        .btn-filter.active {
+            background: var(--pink-100);
+            color: var(--pink-500);
+            border-color: var(--pink-400);
+        }
+
+        .filter-custom {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-h);
+        }
+
+        .date-input {
+            padding: 0.4rem 0.6rem;
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.82rem;
+        }
+
+        /* ─── Refresh btn ─── */
+        .refresh-indicator {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* ─── Responsive ─── */
+        @media(max-width:1000px) {
+            .kpi-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:640px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .admin-nav {
+                padding: 0.6rem 1rem 0;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+
+            .panel-content {
+                padding: 1rem;
+            }
+        }
+
+        @media(max-width:400px) {
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════════════════════════════════════
+     PANTALLA DE LOGIN
+══════════════════════════════════════════ -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">👑</div>
+            <h1 class="login-title">Panel de Administración</h1>
+            <p class="login-subtitle">Acceso exclusivo para administradoras</p>
+
+            <div id="login-alert" class="mb-3"></div>
+
+            <form id="login-form" novalidate>
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Correo electrónico</label>
+                    <input class="form-control" type="email" id="login-email" placeholder="admin@nannyspeques.com"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="login-pass">Contraseña</label>
+                    <div style="position:relative">
+                        <input class="form-control" type="password" id="login-pass" placeholder="••••••••" required>
+                        <button type="button" class="btn-close" id="toggle-pass"
+                            style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;font-size:1rem;">👁️</button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full mt-2" id="login-btn" style="padding:.85rem">
+                    Acceder al panel
+                </button>
+            </form>
+
+            <div style="text-align:center;margin-top:1.5rem">
+                <a href="reclutadora.html" style="font-size:0.82rem;color:var(--text-muted)">← Acceso de reclutadora</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════════ -->
+    <div id="app">
+
+        <!-- Header -->
+        <header class="app-header">
+            <span class="brand"><span class="brand-emoji"></span>Nannys y Peques <span
+                    style="font-size:.65em;font-weight:600;color:var(--text-muted)">· Admin</span></span>
+
+            <div style="display:flex;align-items:center;gap:1rem">
+                <span class="refresh-indicator" id="last-update"></span>
+                <button class="btn btn-sm btn-outline" id="refresh-btn">🔄 Actualizar</button>
+                <div class="header-user">
+                    <div class="user-avatar" id="user-initial">A</div>
+                    <div>
+                        <div class="user-name-disp" id="user-name-display">—</div>
+                        <div class="user-role-disp">Administradora</div>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-outline" id="logout-btn">Salir</button>
+            </div>
+        </header>
+
+        <!-- Tabs de navegación -->
+        <nav class="admin-nav">
+            <button class="nav-tab active" data-tab="dashboard" id="tab-dashboard">📊 Dashboard</button>
+            <button class="nav-tab" data-tab="reclutadoras" id="tab-reclutadoras">👩‍💼 Reclutadoras</button>
+            <button class="nav-tab" data-tab="usuarios" id="tab-usuarios">⚙️ Gestión de Usuarios</button>
+        </nav>
+
+        <!-- ─── TAB: DASHBOARD ─── -->
+        <div id="tab-content-dashboard" class="panel-content">
+
+            <!-- Barra de Filtros -->
+            <div class="filter-bar">
+                <div class="filter-presets">
+                    <button class="btn-filter" data-preset="all">Todo</button>
+                    <button class="btn-filter active" data-preset="today">Hoy</button>
+                    <button class="btn-filter" data-preset="week">Última semana</button>
+                    <button class="btn-filter" data-preset="month">Este mes</button>
+                </div>
+                <div class="filter-custom">
+                    Desde: <input type="date" id="filter-from" class="date-input">
+                    Hasta: <input type="date" id="filter-to" class="date-input">
+                    <button class="btn btn-sm btn-primary" id="btn-apply-custom">Aplicar</button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid" id="kpi-grid">
+                <div class="kpi-card total">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-val" id="kpi-total">—</div>
+                    <div class="kpi-lbl">Total postulaciones</div>
+                </div>
+                <div class="kpi-card pend">
+                    <div class="kpi-icon">⏳</div>
+                    <div class="kpi-val" id="kpi-pend">—</div>
+                    <div class="kpi-lbl">Pendientes</div>
+                </div>
+                <div class="kpi-card acep">
+                    <div class="kpi-icon">✅</div>
+                    <div class="kpi-val" id="kpi-acep">—</div>
+                    <div class="kpi-lbl">En proceso</div>
+                </div>
+                <div class="kpi-card rech">
+                    <div class="kpi-icon">❌</div>
+                    <div class="kpi-val" id="kpi-rech">—</div>
+                    <div class="kpi-lbl">Rechazadas</div>
+                </div>
+                <div class="kpi-card wapp">
+                    <div class="kpi-icon">💬</div>
+                    <div class="kpi-val" id="kpi-wapp">—</div>
+                    <div class="kpi-lbl">WhatsApp</div>
+                </div>
+            </div>
+
+            <!-- Gráfica + Por ciudad -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="section-title">📊 Candidatas por ciudad</div>
+                    <canvas id="bar-chart" height="200"></canvas>
+                </div>
+
+                <div class="city-table-card">
+                    <div class="section-title">🗺️ Detalle por ciudad</div>
+                    <div id="city-detail">
+                        <div class="loading-overlay" style="padding:2rem">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Porcentaje de revisión -->
+            <div class="chart-card" style="margin-bottom:2rem">
+                <div class="section-title">📈 Tasa de revisión general</div>
+                <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+                    <div style="flex:1;min-width:200px">
+                        <div
+                            style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem;font-weight:700;color:var(--text-muted)">
+                            <span>Revisadas</span>
+                            <span id="revision-pct-label">0%</span>
+                        </div>
+                        <div class="progress-bar-wrapper" style="height:10px">
+                            <div class="progress-bar-fill" id="revision-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:2.5rem;font-weight:900;color:var(--text-h)" id="revision-pct-big">0%</div>
+                        <div style="font-size:.8rem;color:var(--text-muted);font-weight:700">de candidatas revisadas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── TAB: RECLUTADORAS ─── -->
+        <div id="tab-content-reclutadoras" class="panel-content" style="display:none">
+
+            <!-- Barra de Filtros Reclutadoras -->
+            <div class="filter-bar" style="margin-bottom:1.5rem">
+                <div class="filter-presets">
+                    <button class="btn-filter btn-filter-rec" data-preset="all">Todo</button>
+                    <button class="btn-filter btn-filter-rec active" data-preset="today">Hoy</button>
+                    <button class="btn-filter btn-filter-rec" data-preset="week">Última semana</button>
+                    <button class="btn-filter btn-filter-rec" data-preset="month">Este mes</button>
+                </div>
+                <div class="filter-custom">
+                    Desde: <input type="date" id="filter-rec-from" class="date-input">
+                    Hasta: <input type="date" id="filter-rec-to" class="date-input">
+                    <button class="btn btn-sm btn-primary" id="btn-apply-rec-custom">Aplicar</button>
+                </div>
+            </div>
+
+            <div class="rec-table-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                    <div class="section-title" style="margin:0">👩‍💼 Rendimiento por reclutadora</div>
+                    <button class="btn btn-sm btn-outline" id="refresh-rec-btn">🔄 Actualizar</button>
+                </div>
+                <div class="table-wrapper" id="rec-table-container">
+                    <div class="loading-overlay" style="padding:2rem">
+                        <div class="spinner"></div>
+                        <span>Cargando datos...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── TAB: USUARIOS ─── -->
+        <div id="tab-content-usuarios" class="panel-content" style="display:none">
+            <div class="rec-table-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                    <div class="section-title" style="margin:0">⚙️ Gestión de Usuarios</div>
+                    <button class="btn btn-primary btn-sm" id="btn-nuevo-usuario">+ Nueva reclutadora</button>
+                </div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem">
+                    Crea cuentas para que tus reclutadoras puedan acceder al panel. Sus contraseñas quedan cifradas con
+                    SHA-256 en Google Sheets.
+                </p>
+                <div id="usuarios-alert" class="mb-2"></div>
+                <div
+                    style="background:var(--blue-50);border-radius:var(--r-md);padding:1.2rem;font-size:0.85rem;color:var(--text-body)">
+                    <strong>📌 Para ver los usuarios registrados:</strong> Abre tu Google Sheets y revisa la hoja
+                    <strong>Usuarios</strong>.
+                    Puedes marcar la columna <code>activo</code> como <code>FALSE</code> para desactivar una cuenta sin
+                    eliminarla.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════
+     MODAL NUEVO USUARIO
+══════════════════════════════════════════ -->
+    <div class="modal-overlay hidden" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 style="margin:0;font-size:1rem">👩‍💼 Nueva reclutadora</h3>
+                <button class="btn-close"
+                    onclick="document.getElementById('modal-overlay').classList.add('hidden')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-alert" class="mb-2"></div>
+                <form id="new-user-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label">Nombre completo <span class="req">*</span></label>
+                        <input class="form-control" type="text" id="nu-nombre" placeholder="Nombre de la reclutadora"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Correo electrónico <span class="req">*</span></label>
+                        <input class="form-control" type="email" id="nu-email" placeholder="correo@ejemplo.com"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña inicial <span class="req">*</span></label>
+                        <input class="form-control" type="text" id="nu-pass" placeholder="Mínimo 8 caracteres" required
+                            minlength="8">
+                        <small style="color:var(--text-muted);font-size:.78rem">La contraseña se almacena cifrada en
+                            Sheets.</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rol</label>
+                        <select class="form-control" id="nu-rol">
+                            <option value="reclutadora">Reclutadora</option>
+                            <option value="admin">Administradora</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ciudades asignadas</label>
+                        <input class="form-control" type="text" id="nu-ciudad"
+                            placeholder="Puebla, Xalapa (Separadas por coma)">
+                        <small style="color:var(--text-muted);font-size:.78rem">Deja vacío para administradoras o usa *
+                            para todas.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline"
+                    onclick="document.getElementById('modal-overlay').classList.add('hidden')">Cancelar</button>
+                <button class="btn btn-primary" id="save-user-btn">Crear cuenta</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════
+        //  ESTADO
+        // ═══════════════════════════════════════════════
+        let SESSION = null;
+        let barChart = null;
+
+        // Estado Dashboard
+        let currentFrom = '';
+        let currentTo = '';
+
+        // Estado Reclutadoras
+        let currentRecFrom = '';
+        let currentRecTo = '';
+
+        // ═══════════════════════════════════════════════
+        //  INIT
+        // ═══════════════════════════════════════════════
+        function init() {
+            SESSION = getSession();
+            if (SESSION && SESSION.rol === 'admin') {
+                showApp();
+                setDatePreset('today');    // Dashboard hoy
+                setDateRecPreset('today'); // Reclutadoras hoy
+                loadDashboard();
+            }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  LOGIN
+        // ═══════════════════════════════════════════════
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const email = document.getElementById('login-email').value.trim();
+            const pass = document.getElementById('login-pass').value;
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner" style="width:18px;height:18px;border-width:3px"></span> Verificando...`;
+
+            try {
+                const result = await apiPost({ action: 'login', email, password: pass });
+                if (result.success) {
+                    if (result.user.rol !== 'admin') {
+                        showAlert('login-alert', 'Esta cuenta no tiene permisos de administración.');
+                        btn.disabled = false;
+                        btn.innerHTML = 'Acceder al panel';
+                        return;
+                    }
+                    saveSession(result.user);
+                    SESSION = result.user;
+                    showApp();
+                    loadDashboard();
+                } else {
+                    showAlert('login-alert', result.message || 'Credenciales incorrectas.');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Acceder al panel';
+                }
+            } catch (err) {
+                showAlert('login-alert', 'Error de conexión. Intenta de nuevo.');
+                btn.disabled = false;
+                btn.innerHTML = 'Acceder al panel';
+            }
+        });
+
+        document.getElementById('toggle-pass').addEventListener('click', () => {
+            const inp = document.getElementById('login-pass');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        });
+
+        // ═══════════════════════════════════════════════
+        //  SHOW APP
+        // ═══════════════════════════════════════════════
+        function showApp() {
+            document.getElementById('login-screen').style.display = 'none';
+            const app = document.getElementById('app');
+            app.style.display = 'flex';
+            app.classList.add('visible');
+            document.getElementById('user-name-display').textContent = SESSION.nombre || SESSION.email;
+            document.getElementById('user-initial').textContent = (SESSION.nombre || 'A')[0].toUpperCase();
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', () => { logout(); window.location.reload(); });
+
+        // ═══════════════════════════════════════════════
+        //  TABS
+        // ═══════════════════════════════════════════════
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                const tabName = tab.dataset.tab;
+                document.querySelectorAll('[id^="tab-content-"]').forEach(c => c.style.display = 'none');
+                document.getElementById('tab-content-' + tabName).style.display = 'block';
+
+                if (tabName === 'reclutadoras') loadReclutadoras();
+            });
+        });
+
+        // ═══════════════════════════════════════════════
+        //  DASHBOARD — MÉTRICAS
+        // ═══════════════════════════════════════════════
+        async function loadDashboard() {
+            try {
+                const result = await apiGet({
+                    action: 'getMetrics',
+                    from: currentFrom,
+                    to: currentTo
+                });
+                if (result.success) renderDashboard(result.data);
+            } catch (err) { }
+        }
+
+        async function loadReclutadoras() {
+            const container = document.getElementById('rec-table-container');
+            container.innerHTML = `<div class="loading-overlay" style="padding:2rem"><div class="spinner"></div><span>Cargando datos...</span></div>`;
+
+            try {
+                const result = await apiGet({
+                    action: 'getReclutadorasStats',
+                    from: currentFrom,
+                    to: currentTo
+                });
+                if (result.success) renderReclutadoras(result.data);
+            } catch (err) { }
+        }
+
+        // ═══════════════════════════════════════════════
+        //  FILTROS DE FECHA
+        // ═══════════════════════════════════════════════
+        function getLocalDateString(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setDatePreset(preset) {
+            const now = new Date();
+            let from = '';
+            let to = '';
+
+            if (preset === 'today') {
+                from = getLocalDateString(now);
+                to = from;
+            } else if (preset === 'week') {
+                const lastWeek = new Date();
+                lastWeek.setDate(now.getDate() - 7);
+                from = getLocalDateString(lastWeek);
+                to = getLocalDateString(now);
+            } else if (preset === 'month') {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                from = getLocalDateString(firstDay);
+                to = getLocalDateString(now);
+            } else if (preset === 'all') {
+                from = '';
+                to = '';
+            }
+
+            currentFrom = from;
+            currentTo = to;
+            document.getElementById('filter-from').value = from;
+            document.getElementById('filter-to').value = to;
+
+            // UI feedback
+            document.querySelectorAll('.btn-filter').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === preset);
+            });
+        }
+
+        document.querySelectorAll('.btn-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setDatePreset(btn.dataset.preset);
+                loadDashboard();
+                if (document.getElementById('tab-reclutadoras').classList.contains('active')) {
+                    loadReclutadoras();
+                }
+            });
+        });
+
+        document.getElementById('btn-apply-custom').addEventListener('click', () => {
+            currentFrom = document.getElementById('filter-from').value;
+            currentTo = document.getElementById('filter-to').value;
+            document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+            loadDashboard();
+        });
+
+        // ═══════════════════════════════════════════════
+        //  FILTROS DE RECLUTADORAS
+        // ═══════════════════════════════════════════════
+        function setDateRecPreset(preset) {
+            const now = new Date();
+            let from = '';
+            let to = '';
+
+            if (preset === 'today') {
+                from = getLocalDateString(now);
+                to = from;
+            } else if (preset === 'week') {
+                const lastWeek = new Date();
+                lastWeek.setDate(now.getDate() - 7);
+                from = getLocalDateString(lastWeek);
+                to = getLocalDateString(now);
+            } else if (preset === 'month') {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                from = getLocalDateString(firstDay);
+                to = getLocalDateString(now);
+            } else if (preset === 'all') {
+                from = '';
+                to = '';
+            }
+
+            currentRecFrom = from;
+            currentRecTo = to;
+            document.getElementById('filter-rec-from').value = from;
+            document.getElementById('filter-rec-to').value = to;
+
+            document.querySelectorAll('.btn-filter-rec').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === preset);
+            });
+        }
+
+        document.querySelectorAll('.btn-filter-rec').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setDateRecPreset(btn.dataset.preset);
+                loadReclutadoras();
+            });
+        });
+
+        document.getElementById('btn-apply-rec-custom').addEventListener('click', () => {
+            currentRecFrom = document.getElementById('filter-rec-from').value;
+            currentRecTo = document.getElementById('filter-rec-to').value;
+            document.querySelectorAll('.btn-filter-rec').forEach(btn => btn.classList.remove('active'));
+            loadReclutadoras();
+        });
+
+        function renderDashboard(data) {
+            // KPIs
+            document.getElementById('kpi-total').textContent = data.total;
+            document.getElementById('kpi-pend').textContent = data.pendiente;
+            document.getElementById('kpi-acep').textContent = data.aceptado;
+            document.getElementById('kpi-rech').textContent = data.rechazado;
+            document.getElementById('kpi-wapp').textContent = data.whatsapp;
+
+            // Tasa de revisión
+            const pct = data.total > 0 ? Math.round((data.revisados / data.total) * 100) : 0;
+            document.getElementById('revision-bar').style.width = pct + '%';
+            document.getElementById('revision-pct-label').textContent = pct + '%';
+            document.getElementById('revision-pct-big').textContent = pct + '%';
+
+            // Actualizar timestamp
+            document.getElementById('last-update').textContent =
+                '⏱ Actualizado: ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+
+            // Detalle por ciudad
+            const ciudades = CONFIG.CIUDADES;
+            const cityHtml = ciudades.map(c => {
+                const d = data.porCiudad[c] || { total: 0, pendiente: 0, aceptado: 0, rechazado: 0, whatsapp: 0 };
+                const pctAcep = d.total > 0 ? Math.round((d.aceptado / d.total) * 100) : 0;
+                return `
+    <div class="city-row">
+      <div class="city-row-name">
+        <span>${CONFIG.CIUDAD_EMOJI[c]}</span>
+        <span>${c}</span>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.85rem;font-weight:800;color:var(--text-h)">${d.total} total</div>
+        <div style="font-size:.75rem;color:var(--text-muted)">${d.aceptado} proceso · ${d.rechazado} rechaz. · ${d.pendiente} pend.</div>
+      </div>
+    </div>`;
+            }).join('');
+            document.getElementById('city-detail').innerHTML = cityHtml;
+
+            // Gráfica de barras
+            renderBarChart(data.porCiudad);
+        }
+
+        function renderBarChart(porCiudad) {
+            const labels = CONFIG.CIUDADES;
+            const ctx = document.getElementById('bar-chart').getContext('2d');
+
+            if (barChart) barChart.destroy();
+
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Pendientes',
+                            data: labels.map(c => (porCiudad[c] || {}).pendiente || 0),
+                            backgroundColor: 'rgba(255, 234, 167, 0.85)',
+                            borderColor: 'rgba(253, 203, 110, 1)',
+                            borderWidth: 2, borderRadius: 6,
+                        },
+                        {
+                            label: 'En proceso',
+                            data: labels.map(c => (porCiudad[c] || {}).aceptado || 0),
+                            backgroundColor: 'rgba(93, 202, 124, 0.85)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 2, borderRadius: 6,
+                        },
+                        {
+                            label: 'Rechazadas',
+                            data: labels.map(c => (porCiudad[c] || {}).rechazado || 0),
+                            backgroundColor: 'rgba(247, 119, 119, 0.85)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 2, borderRadius: 6,
+                        },
+                        {
+                            label: 'WhatsApp',
+                            data: labels.map(c => (porCiudad[c] || {}).whatsapp || 0),
+                            backgroundColor: 'rgba(125, 232, 245, 0.85)',
+                            borderColor: 'rgba(23, 162, 184, 1)',
+                            borderWidth: 2, borderRadius: 6,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Nunito', size: 12, weight: '700' }, padding: 16 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: ctx => ctx[0].label
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Nunito', weight: '700', size: 12 } } },
+                        y: {
+                            beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Nunito', size: 11 } },
+                            grid: { color: 'rgba(255,224,236,0.5)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════
+        //  RECLUTADORAS
+        // ═══════════════════════════════════════════════
+        async function loadReclutadoras() {
+            const container = document.getElementById('rec-table-container');
+            container.innerHTML = `
+    <div class="loading-overlay" style="padding:2rem">
+      <div class="spinner"></div>
+      <span>Cargando...</span>
+    </div>`;
+
+            try {
+                const result = await apiGet({
+                    action: 'getReclutadorasStats',
+                    from: currentRecFrom,
+                    to: currentRecTo
+                });
+                if (result.success) renderRecTable(result.data);
+            } catch (err) {
+                container.innerHTML = `<p style="padding:2rem;color:var(--text-muted)">Error al cargar datos.</p>`;
+            }
+        }
+
+        function renderRecTable(stats) {
+            if (!stats || !stats.length) {
+                document.getElementById('rec-table-container').innerHTML = `
+      <div class="empty-state" style="padding:3rem">
+        <div class="empty-state-emoji">👩‍💼</div>
+        <p style="font-weight:700">Aún no hay actividad de reclutadoras</p>
+        <p style="font-size:.85rem">Los datos aparecerán cuando las reclutadoras revisen formularios.</p>
+      </div>`;
+                return;
+            }
+
+            const rows = stats.map(r => {
+                const pct = r.conversion || 0;
+                return `
+    <tr>
+      <td><div style="font-weight:800;color:var(--text-h)">${r.nombre || r.email}</div>
+          <div style="font-size:.75rem;color:var(--text-muted)">${r.email}</div></td>
+      <td style="font-weight:800;color:var(--text-h)">${r.revisados}</td>
+      <td><span class="badge badge-aceptado">✅ ${r.aceptados}</span></td>
+      <td><span class="badge badge-rechazado">❌ ${r.rechazados}</span></td>
+      <td><span class="badge badge-whatsapp">💬 ${r.whatsapp}</span></td>
+      <td>
+        <div class="conversion-bar-wrap">
+          <div class="conversion-bar-bg">
+            <div class="conversion-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <span style="font-size:.8rem;font-weight:800;color:var(--text-h);min-width:35px">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+            }).join('');
+
+            document.getElementById('rec-table-container').innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Reclutadora</th>
+          <th>Revisadas</th>
+          <th>En proceso</th>
+          <th>Rechazadas</th>
+          <th>WhatsApp</th>
+          <th>% conversión</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+        }
+
+        document.getElementById('refresh-rec-btn').addEventListener('click', loadReclutadoras);
+
+        // ═══════════════════════════════════════════════
+        //  GESTIÓN DE USUARIOS
+        // ═══════════════════════════════════════════════
+        document.getElementById('btn-nuevo-usuario').addEventListener('click', () => {
+            document.getElementById('new-user-form').reset();
+            document.getElementById('modal-alert').innerHTML = '';
+            document.getElementById('modal-overlay').classList.remove('hidden');
+        });
+
+        document.getElementById('save-user-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('save-user-btn');
+            const nombre = document.getElementById('nu-nombre').value.trim();
+            const email = document.getElementById('nu-email').value.trim();
+            const pass = document.getElementById('nu-pass').value;
+            const rol = document.getElementById('nu-rol').value;
+            const ciudad = document.getElementById('nu-ciudad').value.trim();
+
+            if (!nombre || !email || !pass) {
+                showAlert('modal-alert', 'Todos los campos son obligatorios.');
+                return;
+            }
+            if (pass.length < 8) {
+                showAlert('modal-alert', 'La contraseña debe tener mínimo 8 caracteres.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px"></span>`;
+
+            try {
+                const result = await apiPost({ action: 'createUser', nombre, email, password: pass, rol, ciudad });
+                if (result.success) {
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    showToast(`✅ Cuenta creada para ${nombre}`);
+                } else {
+                    showAlert('modal-alert', result.message || 'Error al crear usuario.');
+                }
+            } catch (err) {
+                showAlert('modal-alert', 'Error de conexión.');
+            }
+            btn.disabled = false;
+            btn.innerHTML = 'Crear cuenta';
+        });
+
+        // Cerrar modal al hacer clic afuera
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
+        });
+
+        // Refresh
+        document.getElementById('refresh-btn').addEventListener('click', loadDashboard);
+
+        // ═══════════════════════════════════════════════
+        //  TOAST
+        // ═══════════════════════════════════════════════
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span>${msg}</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ─── Arranque ─────────────────────────────────
+        init();
+    </script>
+</body>
+
+</html>

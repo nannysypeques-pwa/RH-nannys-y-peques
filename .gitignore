@@ -1,0 +1,14 @@
+# Google Apps Script Backend (Seguridad)
+apps-script/
+
+# Configuración de Inteligencia Artificial / Asistentes
+.gemini/
+.agent/
+
+# Archivos de Sistema
+Thumbs.db
+.DS_Store
+
+# Archivos temporales o de bitácora
+*.log
+tmp/

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Nannys y Peques · Postulación</title>
+    <link rel="icon" type="image/png" href="logo-sin-fondo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/config.js"></script>
+    <script src="js/formulario.js" defer></script>
+    <style>
+        .cond {
+            display: none
+        }
+
+        .sub-block {
+            background: rgba(255, 240, 245, .5);
+            border-left: 3px solid var(--pink-200);
+            border-radius: 0 var(--r-md) var(--r-md) 0;
+            padding: .9rem 1.1rem;
+            margin: .6rem 0 .3rem .8rem
+        }
+
+        .sub-block.blue {
+            background: rgba(240, 248, 255, .5);
+            border-left-color: var(--blue-200)
+        }
+
+        .sub-block.yellow {
+            background: rgba(255, 253, 240, .5);
+            border-left-color: var(--yellow-200)
+        }
+
+        .sub-block.green {
+            background: rgba(212, 237, 218, .3);
+            border-left-color: #5dca7c
+        }
+
+        .family-block {
+            background: var(--pink-50);
+            border: 1px solid var(--pink-100);
+            border-radius: var(--r-lg);
+            padding: 1.1rem;
+            margin-bottom: .7rem
+        }
+
+        .fb-title {
+            font-weight: 800;
+            color: var(--pink-500);
+            font-size: .85rem;
+            margin-bottom: .8rem
+        }
+
+        .fg2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0 1.2rem
+        }
+
+        .form-card {
+            background: var(--surface);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.6rem;
+            margin-bottom: 1.2rem
+        }
+
+        .sec-hdr {
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            margin-bottom: 1.3rem;
+            padding-bottom: .6rem;
+            border-bottom: 2px solid var(--pink-100)
+        }
+
+        .sec-emoji {
+            font-size: 1.5rem
+        }
+
+        .sec-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-h)
+        }
+
+        .sec-sub {
+            font-size: .78rem;
+            color: var(--text-muted)
+        }
+
+        @media(max-width:560px) {
+            .fg2 {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="form-header" id="form-header">
+        <div style="max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+                <a href="index.html"
+                    style="font-size:.83rem;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:.3rem">←
+                    Regresar</a>
+                <span class="city-chip" id="city-chip">📍 Ciudad</span>
+                <span class="brand" style="font-size:.9rem">Nannys y Peques</span>
+            </div>
+            <div>
+                <div
+                    style="display:flex;justify-content:space-between;font-size:.76rem;font-weight:700;color:var(--text-muted);margin-bottom:.25rem">
+                    <span>Tu progreso</span><span id="progress-pct">0%</span>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div style="max-width:720px;margin:2rem auto;padding:0 1.2rem 4rem" id="form-wrapper">
+
+            <div
+                style="background:linear-gradient(135deg,var(--pink-50),var(--blue-50));border-radius:var(--r-lg);padding:1.2rem;margin-bottom:1.5rem;text-align:center;border:1px solid var(--pink-100)">
+                <div style="font-size:2rem;margin-bottom:.3rem">🌟</div>
+                <h2 style="font-size:1.1rem;margin-bottom:.25rem">¡Estás a un paso de unirte a nuestra familia!</h2>
+                <p style="color:var(--text-muted);font-size:.85rem">Completa este formulario con honestidad. Toda tu
+                    información es confidencial. ¡Tú eres especial para nosotras! 💕</p>
+            </div>
+
+            <div id="alert-container" class="mb-3"></div>
+
+            <form id="candidata-form" novalidate>
+                <input type="hidden" id="ciudad-input">
+
+                <!-- ═══ SECCIÓN 1: IDENTIFICACIÓN ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">👩</span>
+                        <div>
+                            <div class="sec-title">Tus datos</div>
+                            <div class="sec-sub">Cuéntanos quién eres</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="nombre">¿Cuál es tu nombre completo? <span
+                                class="req">*</span></label>
+                        <input class="form-control" type="text" id="nombre" placeholder="Tu nombre completo"
+                            autocomplete="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">¿Cuál es tu correo electrónico? <span
+                                class="req">*</span></label>
+                        <input class="form-control" type="email" id="email" placeholder="ejemplo@correo.com"
+                            autocomplete="email" required>
+                    </div>
+                    <div class="fg2">
+                        <div class="form-group">
+                            <label class="form-label" for="edad">¿Cuántos años tienes ya cumplidos? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="number" id="edad" placeholder="Ej. 24" min="18" max="65"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="tel_principal">¿Cuál es tu número de contacto? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="tel" id="tel_principal" placeholder="10 dígitos"
+                                autocomplete="tel" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tel_alternativo">¿Tienes otro número de contacto?</label>
+                        <input class="form-control" type="tel" id="tel_alternativo"
+                            placeholder="Número alternativo (opcional)">
+                    </div>
+                </div>
+
+                <!-- ═══ SECCIÓN 2: FORMACIÓN ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">🎓</span>
+                        <div>
+                            <div class="sec-title">Tu formación académica</div>
+                            <div class="sec-sub">Cuéntanos sobre tus estudios</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">¿Cuál es tu último grado de estudios? <span
+                                class="req">*</span></label>
+                        <div class="radio-group" id="grado-group">
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-sec"
+                                    value="Secundaria"><label for="g-sec">📖 Secundaria</label></div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-bac"
+                                    value="Bachiller/Preparatoria"><label for="g-bac">🏫 Bachiller/Preparatoria</label>
+                            </div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-tec"
+                                    value="Técnico profesional"><label for="g-tec">🔧 Técnico profesional</label></div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-lic"
+                                    value="Licenciatura enfocada al desarrollo infantil"><label for="g-lic">🎓
+                                    Licenciatura (desarrollo infantil)</label></div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-otra-lic"
+                                    value="Otra licenciatura"><label for="g-otra-lic">📋 Otra licenciatura</label></div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-mae"
+                                    value="Maestría"><label for="g-mae">🏅 Maestría</label></div>
+                            <div class="radio-pill"><input type="radio" name="grado_estudios" id="g-est"
+                                    value="Actualmente estudiando"><label for="g-est">📚 Actualmente estudiando</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sub-block cond" id="sub-tecnico">
+                        <div class="form-group mb-1">
+                            <label class="form-label" for="tecnico_cual">¿En qué fue tu técnico? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="tecnico_cual"
+                                placeholder="Ej. Técnico en Puericultura">
+                        </div>
+                    </div>
+
+                    <div class="sub-block cond" id="sub-licenciatura">
+                        <div class="form-group mb-1">
+                            <label class="form-label" for="licenciatura_tipo">¿Cuál licenciatura? <span
+                                    class="req">*</span></label>
+                            <select class="form-control" id="licenciatura_tipo">
+                                <option value="">Selecciona...</option>
+                                <option value="Pedagogía">Pedagogía</option>
+                                <option value="Enfermería">Enfermería</option>
+                                <option value="Fisioterapia">Fisioterapia</option>
+                                <option value="Psicología">Psicología</option>
+                                <option value="Puericultura">Puericultura</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="sub-block cond" id="sub-otra-licenciatura">
+                        <div class="form-group mb-1">
+                            <label class="form-label" for="otra_licenciatura_cual">¿Cuál es tu licenciatura? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="otra_licenciatura_cual"
+                                placeholder="Nombre de tu licenciatura">
+                        </div>
+                    </div>
+
+                    <div class="sub-block cond" id="sub-maestria">
+                        <div class="form-group mb-1">
+                            <label class="form-label" for="maestria_cual">¿Cuál maestría? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="maestria_cual"
+                                placeholder="Nombre de tu maestría">
+                        </div>
+                    </div>
+
+                    <div class="sub-block blue cond" id="sub-estudiando">
+                        <div class="form-group">
+                            <label class="form-label" for="estudiando_que">¿Qué estás estudiando? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="estudiando_que"
+                                placeholder="Nombre de tu carrera">
+                        </div>
+                        <div class="fg2">
+                            <div class="form-group">
+                                <label class="form-label" for="estudiando_semestre">¿En qué semestre o cuatrimestre?
+                                    <span class="req">*</span></label>
+                                <input class="form-control" type="text" id="estudiando_semestre"
+                                    placeholder="Ej. 5to semestre">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="estudiando_horarios">¿Horarios y días en los que asistes?
+                                    <span class="req">*</span></label>
+                                <input class="form-control" type="text" id="estudiando_horarios"
+                                    placeholder="Ej. L-V 7am-1pm">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">¿Te encuentras en prácticas? <span class="req">*</span></label>
+                            <div class="radio-group">
+                                <div class="radio-pill"><input type="radio" name="en_practicas" id="prac-no"
+                                        value="No"><label for="prac-no">❌ No</label></div>
+                                <div class="radio-pill"><input type="radio" name="en_practicas" id="prac-si"
+                                        value="Sí"><label for="prac-si">✅ Sí</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block green cond" id="sub-practicas">
+                            <div class="form-group">
+                                <label class="form-label">¿Tus prácticas son con pequeñitos? <span
+                                        class="req">*</span></label>
+                                <div class="radio-group">
+                                    <div class="radio-pill"><input type="radio" name="practicas_pequenitos" id="pp-no"
+                                            value="No"><label for="pp-no">❌ No</label></div>
+                                    <div class="radio-pill"><input type="radio" name="practicas_pequenitos" id="pp-si"
+                                            value="Sí"><label for="pp-si">👶 Sí</label></div>
+                                </div>
+                            </div>
+                            <div class="cond" id="sub-practicas-detalle">
+                                <div class="form-group">
+                                    <label class="form-label" for="practicas_donde">¿Dónde las estás realizando? <span
+                                            class="req">*</span></label>
+                                    <input class="form-control" type="text" id="practicas_donde"
+                                        placeholder="Nombre del lugar">
+                                </div>
+                                <div class="form-group mb-1">
+                                    <label class="form-label" for="practicas_horarios">¿Tus días y horarios de
+                                        prácticas? <span class="req">*</span></label>
+                                    <input class="form-control" type="text" id="practicas_horarios"
+                                        placeholder="Ej. Lunes y Miércoles 8am-12pm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECCIÓN 3: ZONA ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">📍</span>
+                        <div>
+                            <div class="sec-title">Tu ubicación</div>
+                            <div class="sec-sub">¿En qué zona vives?</div>
+                        </div>
+                    </div>
+
+                    <!-- Puebla: zonas específicas -->
+                    <div id="zona-puebla-section" class="cond">
+                        <div class="form-group">
+                            <label class="form-label">¿En qué zona de la ciudad de Puebla te encuentras? <span
+                                    class="req">*</span></label>
+                            <div class="radio-group" style="flex-direction:column;align-items:flex-start">
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona1"
+                                        value="Zona 1 – Cuautlancingo, Momoxpan, Cholula, Forjadores, Mision SFco, Sanctorum, Ocotlán, CAPU, San Felipe, La María"><label
+                                        for="zona1">🔵 Zona 1 — Cuautlancingo, Momoxpan, Cholula, Forjadores, Misiones
+                                        de Sn.Francisco, Sanctorum, Ocotlán, CAPU, San Felipe, La María</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona2"
+                                        value="Zona 2 – Plaza Dorada, Parque Ecológico, China Poblana, Los Fuertes, Zona Industrial, Centro, Bosques, Zona Militar"><label
+                                        for="zona2">🟣 Zona 2 — Plaza Dorada, Parque Ecológico, China Poblana, Los
+                                        Fuertes, Zona Industrial, Estadios, Centro, Seminario, Bosques, Zona
+                                        Militar</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona3"
+                                        value="Zona 3 – Zavaleta, Angelópolis, Las Animas, San Andrés Cholula, Tlaxcalancingo, Niño Poblano, Emiliano Zapata, Paseo Destino"><label
+                                        for="zona3">🟢 Zona 3 — Zavaleta, Angelópolis, Las Animas, San Andrés Cholula,
+                                        Tlaxcalancingo, Niño poblano, Emiliano Zapata, Ciudad Judicial, Paseo
+                                        Destino</label>
+                                </div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona4"
+                                        value="Zona 4 – San Manuel, Castillotla, Guadalupe Hidalgo, Héroes, Plaza Crystal, La Margarita, C.U, Lomas del Valle"><label
+                                        for="zona4">🟡 Zona 4 — San Manuel, Castillotla, Guadalupe Hidalgo, Héroes,
+                                        Chapulco, Plaza Crystal, La Margarita, C.U, Lomas del Valle</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona-ext"
+                                        value="Exterior de Puebla – Chachapa, Amozoc, Totimehuacan, Almecatla, Coronango, Huejotzingo"><label
+                                        for="zona-ext">🗺️ Exterior de Puebla: Chachapa, Amozoc, San Francisco
+                                        Totimehuacan, San Lorenzo
+                                        Almecatla, Misiones de San Francisco, Coronango, Huejotzingo</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad" id="zona-otra"
+                                        value="Otra"><label for="zona-otra">📌 Otra</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block cond" id="sub-zona-otra">
+                            <div class="form-group mb-1">
+                                <label class="form-label" for="zona_otra_cual">¿Cuál es tu zona o colonia? <span
+                                        class="req">*</span></label>
+                                <input class="form-control" type="text" id="zona_otra_cual"
+                                    placeholder="Nombre de tu colonia o zona">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Querétaro: zonas específicas -->
+                    <div id="zona-qro-section" class="cond">
+                        <div class="form-group">
+                            <label class="form-label">¿En qué zona de Querétaro te encuentras? <span
+                                    class="req">*</span></label>
+                            <div class="radio-group" style="flex-direction:column;align-items:flex-start">
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq1"
+                                        value="Zona 1 Qro"><label for="zq1">🔵 Zona 1 Qro</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq2"
+                                        value="Zona 2 Qro"><label for="zq2">🟣 Zona 2 Qro</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq3"
+                                        value="Zona 3 Qro"><label for="zq3">🟢 Zona 3 Qro</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq4"
+                                        value="Zona 4 Qro"><label for="zq4">🟡 Zona 4 Qro</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq-ext"
+                                        value="Exterior de Querétaro"><label for="zq-ext">🗺️ Exterior de
+                                        Querétaro</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_qro" id="zq-otra"
+                                        value="Otra"><label for="zq-otra">📌 Otra</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block cond" id="sub-zona-otra-qro">
+                            <div class="form-group mb-1">
+                                <label class="form-label" for="zona_otra_cual_qro">¿Cuál es tu zona o colonia? <span
+                                        class="req">*</span></label>
+                                <input class="form-control" type="text" id="zona_otra_cual_qro"
+                                    placeholder="Nombre de tu colonia o zona">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Xalapa: zonas específicas -->
+                    <div id="zona-xal-section" class="cond">
+                        <div class="form-group">
+                            <label class="form-label">¿En qué zona de Xalapa te encuentras? <span
+                                    class="req">*</span></label>
+                            <div class="radio-group" style="flex-direction:column;align-items:flex-start">
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx1"
+                                        value="Zona 1 Xal"><label for="zx1">🔵 Zona 1 Xal</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx2"
+                                        value="Zona 2 Xal"><label for="zx2">🟣 Zona 2 Xal</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx3"
+                                        value="Zona 3 Xal"><label for="zx3">🟢 Zona 3 Xal</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx4"
+                                        value="Zona 4 Xal"><label for="zx4">🟡 Zona 4 Xal</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx-ext"
+                                        value="Exterior de Xalapa"><label for="zx-ext">🗺️ Exterior de Xalapa</label>
+                                </div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_xal" id="zx-otra"
+                                        value="Otra"><label for="zx-otra">📌 Otra</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block cond" id="sub-zona-otra-xal">
+                            <div class="form-group mb-1">
+                                <label class="form-label" for="zona_otra_cual_xal">¿Cuál es tu zona o colonia? <span
+                                        class="req">*</span></label>
+                                <input class="form-control" type="text" id="zona_otra_cual_xal"
+                                    placeholder="Nombre de tu colonia o zona">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CDMX: zonas específicas -->
+                    <div id="zona-cdmx-section" class="cond">
+                        <div class="form-group">
+                            <label class="form-label">¿En qué zona de CDMX te encuentras? <span
+                                    class="req">*</span></label>
+                            <div class="radio-group" style="flex-direction:column;align-items:flex-start">
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc1"
+                                        value="Zona 1 CDMX"><label for="zc1">🔵 Zona 1 CDMX</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc2"
+                                        value="Zona 2 CDMX"><label for="zc2">🟣 Zona 2 CDMX</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc3"
+                                        value="Zona 3 CDMX"><label for="zc3">🟢 Zona 3 CDMX</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc4"
+                                        value="Zona 4 CDMX"><label for="zc4">🟡 Zona 4 CDMX</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc-ext"
+                                        value="Exterior de CDMX"><label for="zc-ext">🗺️ Exterior de CDMX</label></div>
+                                <div class="radio-pill"><input type="radio" name="zona_ciudad_cdmx" id="zc-otra"
+                                        value="Otra"><label for="zc-otra">📌 Otra</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block cond" id="sub-zona-otra-cdmx">
+                            <div class="form-group mb-1">
+                                <label class="form-label" for="zona_otra_cual_cdmx">¿Cuál es tu zona o colonia? <span
+                                        class="req">*</span></label>
+                                <input class="form-control" type="text" id="zona_otra_cual_cdmx"
+                                    placeholder="Nombre de tu colonia o zona">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Otras ciudades: campo libre (fallback) -->
+                    <div id="zona-libre-section" class="cond">
+                        <div class="form-group">
+                            <label class="form-label" for="zona_libre">¿En qué zona o colonia de tu ciudad vives? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="zona_libre"
+                                placeholder="Nombre de tu colonia, fraccionamiento o zona">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECCIÓN 4: DISPONIBILIDAD ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">📅</span>
+                        <div>
+                            <div class="sec-title">Tu disponibilidad</div>
+                            <div class="sec-sub">¿Cuándo puedes trabajar?</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">¿Con qué disponibilidad cuentas para laborar? <span
+                                class="req">*</span></label>
+                        <div class="radio-group" style="flex-direction:column;align-items:flex-start" id="disp-group">
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d1"
+                                    value="Lunes a viernes TODO EL DÍA"><label for="d1">⭐ Lunes a viernes — TODO EL
+                                    DÍA</label></div>
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d2"
+                                    value="Lunes a viernes MEDIO DÍA MAÑANAS"><label for="d2">🌅 Lunes a viernes — medio
+                                    día por las MAÑANAS</label></div>
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d3"
+                                    value="Lunes a viernes MEDIO DÍA TARDES"><label for="d3">🌤️ Lunes a viernes — medio
+                                    día por las TARDES</label></div>
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d4"
+                                    value="TODA LA SEMANA DISPONIBILIDAD TOTAL"><label for="d4">🗓️ Toda la semana —
+                                    disponibilidad total</label></div>
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d5"
+                                    value="FINES DE SEMANA"><label for="d5">🏖️ Fines de semana (sábado y
+                                    domingo)</label></div>
+                            <div class="radio-pill"><input type="radio" name="disponibilidad" id="d6"
+                                    value="Otro horario"><label for="d6">🕐 Otro horario</label></div>
+                        </div>
+                    </div>
+                    <div class="sub-block cond" id="sub-disp-horario">
+                        <div class="form-group mb-1">
+                            <label class="form-label" for="disp_horario_detalle">Especifica tu horario <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="disp_horario_detalle"
+                                placeholder="Ej. 8am a 2pm / Sábados 9am-6pm">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ SECCIÓN 5: EXPERIENCIA ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">👶</span>
+                        <div>
+                            <div class="sec-title">Tu experiencia con peques</div>
+                            <div class="sec-sub">Selecciona todas las que apliquen</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">¿Dónde has trabajado con peques? <span class="req">*</span> <small
+                                style="font-weight:500">(puedes seleccionar más de una)</small></label>
+                        <div class="radio-group" style="flex-direction:column;align-items:flex-start"
+                            id="exp-checkboxes">
+                            <div class="check-pill"><input type="checkbox" id="cb-familia" value="familia"><label
+                                    for="cb-familia">👨‍👩‍👧 Niñera con mi misma familia (hermanos, primos,
+                                    sobrinos)</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-ninera" value="ninera"><label
+                                    for="cb-ninera">🏠 Niñera particular</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-guarderia" value="guarderia"><label
+                                    for="cb-guarderia">🏫 Guarderías y/o estancias</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-escuela" value="escuela"><label
+                                    for="cb-escuela">📚 Escuelas</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-servicio_social"
+                                    value="servicio_social"><label for="cb-servicio_social">🤝 Servicio social</label>
+                            </div>
+                            <div class="check-pill"><input type="checkbox" id="cb-practica_prof"
+                                    value="practica_prof"><label for="cb-practica_prof">📝 Práctica profesional</label>
+                            </div>
+                            <div class="check-pill"><input type="checkbox" id="cb-voluntariado"
+                                    value="voluntariado"><label for="cb-voluntariado">💚 Voluntariado</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-campamentos"
+                                    value="campamentos"><label for="cb-campamentos">⛺ Campamentos o cursos de
+                                    verano</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-clases"
+                                    value="clases_particulares"><label for="cb-clases">📖 Clases particulares, club de
+                                    tareas o regularización</label></div>
+                            <div class="check-pill"><input type="checkbox" id="cb-hospitalaria"
+                                    value="hospitalaria"><label for="cb-hospitalaria">🏥 Área hospitalaria o
+                                    rehabilitación</label></div>
+                        </div>
+                    </div>
+
+                    <!-- Sub: Niñera particular -->
+                    <div class="sub-block cond" id="sub-ninera">
+                        <div class="form-group">
+                            <label class="form-label" for="ninera_num_familias">¿Con cuántas familias has estado? <span
+                                    class="req">*</span></label>
+                            <select class="form-control" id="ninera_num_familias" style="max-width:200px">
+                                <option value="">Selecciona...</option>
+                                <option value="1">1 familia</option>
+                                <option value="2">2 familias</option>
+                                <option value="3">3 familias</option>
+                                <option value="4">4 familias</option>
+                                <option value="5">5 o más familias</option>
+                            </select>
+                        </div>
+                        <div id="familia-blocks-container"></div>
+                    </div>
+
+                    <!-- Sub: Guarderías -->
+                    <div class="sub-block blue cond" id="sub-guarderia">
+                        <div class="form-group">
+                            <label class="form-label">¿Cuentas con referencias? <span class="req">*</span></label>
+                            <div class="radio-group">
+                                <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-no"
+                                        value="No"><label for="gref-no">❌ No</label></div>
+                                <div class="radio-pill"><input type="radio" name="guarderia_ref" id="gref-si"
+                                        value="Sí"><label for="gref-si">✅ Sí</label></div>
+                            </div>
+                        </div>
+                        <div class="sub-block green cond" id="sub-guarderia-ref-tipo">
+                            <div class="form-group mb-1">
+                                <label class="form-label" style="font-size:.82rem">Tipo de referencias:</label>
+                                <div class="radio-group">
+                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-a"
+                                            value="Cartas de recomendación"><label for="grt-a">📄 Cartas</label></div>
+                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-b"
+                                            value="Números jefe/supervisor"><label for="grt-b">📞 Números</label></div>
+                                    <div class="check-pill"><input type="checkbox" name="guarderia_ref_tipo" id="grt-c"
+                                            value="Otro"><label for="grt-c">🔹 Otro</label></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="guarderia_anio">¿En qué año y cuánto tiempo estuviste? <span
+                                    class="req">*</span></label>
+                            <input class="form-control" type="text" id="guarderia_anio"
+                                placeholder="Ej. 2019 al 2021 (2 años)">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">¿Con qué rango de edad has trabajado? <span class="req">*</span>
+                                <small style="font-weight:500">(puedes seleccionar varios)</small></label>
+                            <div class="radio-group">
+                                <div class="check-pill"><input type="checkbox" id="grango-l" name="guarderia_rango"
+                                        value="Lactantes"><label for="grango-l">👶 Lactantes (0-18 meses)</label></div>
+                                <div class="check-pill"><input type="checkbox" id="grango-m" name="guarderia_rango"
+                                        value="Maternal"><label for="grango-m">🧒 Maternal (19m-3 años)</label></div>
+                                <div class="check-pill"><input type="checkbox" id="grango-p" name="guarderia_rango"
+                                        value="Preescolar"><label for="grango-p">🎨 Preescolar (3+ años)</label></div>
+                            </div>
+                        </div>
+
+                        <!-- Lactantes -->
+                        <div class="sub-block cond" id="sub-guarderia-lactantes">
+                            <p style="font-weight:800;font-size:.82rem;color:var(--pink-400);margin-bottom:.7rem">👶
+                                Lactantes — detalles</p>
+                            <div class="form-group"><label class="form-label" for="g_l_edad">Especifica la edad de los
+                                    peques <span class="req">*</span></label><input class="form-control" type="text"
+                                    id="g_l_edad" placeholder="Ej. 3 meses a 1 año"></div>
+                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                <span
+                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                    <span class="req">*</span></span>
+                                <div class="check-pill"><input type="checkbox" id="g_l_pañal" name="g_l_act"
+                                        value="Cambio de pañal"><label for="g_l_pañal">🧷 Cambio de pañal</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_l_biberon" name="g_l_act"
+                                        value="Preparé biberón"><label for="g_l_biberon">🍼 Biberón</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_l_baño" name="g_l_act"
+                                        value="Bañé peques"><label for="g_l_baño">🛁 Baño</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_l_estim" name="g_l_act"
+                                        value="Actividades de estimulación"><label for="g_l_estim">🎯
+                                        Estimulación</label></div>
+                            </div>
+                            <div class="form-group mt-2"><label class="form-label" for="g_l_actividades">¿Cuáles eran
+                                    tus actividades principales? <span class="req">*</span></label><textarea
+                                    class="form-control" id="g_l_actividades" rows="2"
+                                    placeholder="Describe tus actividades..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Maternal -->
+                        <div class="sub-block cond" id="sub-guarderia-maternal">
+                            <p style="font-weight:800;font-size:.82rem;color:var(--blue-400);margin-bottom:.7rem">🧒
+                                Maternal — detalles</p>
+                            <div class="form-group"><label class="form-label" for="g_m_edad">Especifica la edad de los
+                                    peques <span class="req">*</span></label><input class="form-control" type="text"
+                                    id="g_m_edad" placeholder="Ej. 1.5 a 3 años"></div>
+                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                <span
+                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                    <span class="req">*</span></span>
+                                <div class="check-pill"><input type="checkbox" id="g_m_pañal" name="g_m_act"
+                                        value="Cambio de pañal"><label for="g_m_pañal">🧷 Pañal</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_m_esfin" name="g_m_act"
+                                        value="Control de esfínteres"><label for="g_m_esfin">🚽 Esfínteres</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_m_bib" name="g_m_act"
+                                        value="Preparé biberón"><label for="g_m_bib">🍼 Biberón</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_m_baño" name="g_m_act"
+                                        value="Bañé peques"><label for="g_m_baño">🛁 Baño</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_m_estim" name="g_m_act"
+                                        value="Estimulación"><label for="g_m_estim">🎯 Estimulación</label></div>
+                            </div>
+                            <div class="form-group mt-2"><label class="form-label" for="g_m_actividades">¿Cuáles eran
+                                    tus actividades principales? <span class="req">*</span></label><textarea
+                                    class="form-control" id="g_m_actividades" rows="2"
+                                    placeholder="Describe tus actividades..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Preescolar -->
+                        <div class="sub-block cond" id="sub-guarderia-preescolar">
+                            <p style="font-weight:800;font-size:.82rem;color:#28a745;margin-bottom:.7rem">🎨 Preescolar
+                                — detalles</p>
+                            <div class="form-group"><label class="form-label" for="g_p_edad">Especifica la edad de los
+                                    peques <span class="req">*</span></label><input class="form-control" type="text"
+                                    id="g_p_edad" placeholder="Ej. 3 a 5 años"></div>
+                            <div class="radio-group" style="flex-wrap:wrap;gap:.4rem">
+                                <span
+                                    style="font-size:.8rem;font-weight:700;color:var(--text-muted);width:100%">Actividades:
+                                    <span class="req">*</span></span>
+                                <div class="check-pill"><input type="checkbox" id="g_p_pañal" name="g_p_act"
+                                        value="Cambio de pañal"><label for="g_p_pañal">🧷 Pañal</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_p_esfin" name="g_p_act"
+                                        value="Control de esfínteres"><label for="g_p_esfin">🚽 Esfínteres</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_p_alim" name="g_p_act"
+                                        value="Preparé alimentos"><label for="g_p_alim">🍽️ Alimentos</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_p_baño" name="g_p_act"
+                                        value="Bañé peques"><label for="g_p_baño">🛁 Baño</label></div>
+                                <div class="check-pill"><input type="checkbox" id="g_p_estim" name="g_p_act"
+                                        value="Estimulación"><label for="g_p_estim">🎯 Estimulación</label></div>
+                            </div>
+                            <div class="form-group mt-2"><label class="form-label" for="g_p_actividades">¿Cuáles eran
+                                    tus actividades principales? <span class="req">*</span></label><textarea
+                                    class="form-control" id="g_p_actividades" rows="2"
+                                    placeholder="Describe tus actividades..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor para sub-secciones genéricas generadas por JS -->
+                    <div id="generic-exp-subs"></div>
+
+                </div><!-- /sec5 -->
+
+                <!-- ═══ SECCIÓN 6: ASPIRACIONES ═══ -->
+                <div class="form-card">
+                    <div class="sec-hdr"><span class="sec-emoji">🌟</span>
+                        <div>
+                            <div class="sec-title">Tus aspiraciones</div>
+                            <div class="sec-sub">¡Casi terminamos!</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tiempo_trabajo">¿Qué tiempo te gustaría trabajar con nosotras?
+                            <span class="req">*</span></label>
+                        <select class="form-control" id="tiempo_trabajo" required>
+                            <option value="">Selecciona...</option>
+                            <option value="0 a 6 meses">⏳ 0 a 6 meses</option>
+                            <option value="1 año">📅 1 año</option>
+                            <option value="Vacaciones">🏖️ Vacaciones</option>
+                            <option value="Otra">✏️ Otra</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">¿Has trabajado en otra(s) agencia(s) de niñeras? <span
+                                class="req">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-pill"><input type="radio" name="otras_agencias" id="ag-no"
+                                    value="No"><label for="ag-no">❌ No</label></div>
+                            <div class="radio-pill"><input type="radio" name="otras_agencias" id="ag-si"
+                                    value="Sí"><label for="ag-si">✅ Sí</label></div>
+                        </div>
+                    </div>
+                    <div class="sub-block cond" id="sub-agencias">
+                        <div class="fg2">
+                            <div class="form-group">
+                                <label class="form-label" for="nombre_agencia">¿Cuál es el nombre de la agencia? <span
+                                        class="req">*</span></label>
+                                <input class="form-control" type="text" id="nombre_agencia"
+                                    placeholder="Nombre de la agencia">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">¿Tienes referencias laborales de esa agencia?</label>
+                                <div class="radio-group">
+                                    <div class="radio-pill"><input type="radio" name="ref_agencia" id="ra-no"
+                                            value="No"><label for="ra-no">❌ No</label></div>
+                                    <div class="radio-pill"><input type="radio" name="ref_agencia" id="ra-si"
+                                            value="Sí"><label for="ra-si">✅ Sí</label></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ENVIAR -->
+                <div
+                    style="background:linear-gradient(135deg,var(--pink-50),var(--yellow-50));border-radius:var(--r-xl);padding:2rem;text-align:center;border:2px dashed var(--pink-200)">
+                    <p style="font-size:1.05rem;font-weight:800;color:var(--text-h);margin-bottom:.4rem">¡Casi lista! 🌟
+                    </p>
+                    <p style="font-size:.87rem;color:var(--text-muted);margin-bottom:1.3rem">Revisa que tu información
+                        esté correcta y envía tu postulación.</p>
+                    <button type="submit" class="btn btn-primary btn-lg" id="submit-btn"><span>Enviar mi
+                            postulación</span> <span>💕</span></button>
+                    <p style="font-size:.78rem;color:var(--text-muted);margin-top:.7rem">Al enviar, aceptas que
+                        Nannys y Peques guarde tu información con fines de reclutamiento.</p>
+                </div>
+
+            </form>
+
+            <!-- ÉXITO -->
+            <div id="success-screen" class="hidden"
+                style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 1rem">
+                <div style="font-size:4.5rem;margin-bottom:1.2rem;animation:bounce .6s ease">🎉</div>
+                <h2
+                    style="font-size:1.8rem;font-weight:900;margin-bottom:.8rem;background:linear-gradient(135deg,var(--pink-400),var(--blue-400));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+                    ¡Tu postulación fue enviada!</h2>
+                <p style="color:var(--text-body);line-height:1.7;margin-bottom:1.5rem">Muchas gracias, <strong
+                        id="nombre-confirmacion"></strong>. 💕<br>Pronto nos pondremos en contacto contigo por WhatsApp.
+                </p>
+                <a href="index.html" class="btn btn-outline">← Volver al inicio</a>
+            </div>
+
+            <!-- YA REGISTRADA -->
+            <div id="already-registered-screen" class="hidden"
+                style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 1rem">
+                <div style="font-size:4.5rem;margin-bottom:1.2rem">💖</div>
+                <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:.8rem;color:var(--pink-500)">¡Ya recibimos tu
+                    postulación!</h2>
+                <p style="color:var(--text-body);line-height:1.7;margin-bottom:1.5rem">Detectamos que ya habías enviado
+                    tus datos anteriormente.<br>No te preocupes, ya te tenemos en nuestra lista de espera. Próximamente
+                    nos comunicaremos contigo.</p>
+                <a href="index.html" class="btn btn-outline">← Volver al inicio</a>
+            </div>
+
+        </div>
+    </main>
+</body>
+
+</html>
