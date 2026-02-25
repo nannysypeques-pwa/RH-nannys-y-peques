@@ -764,6 +764,10 @@
         function init() {
             const sessionData = getSession();
             if (sessionData && sessionData.user) {
+                if (sessionData.user.rol === 'admin') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
                 SESSION = sessionData.user;
                 showApp();
                 loadCandidatas();

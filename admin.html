@@ -797,12 +797,16 @@
         // ═══════════════════════════════════════════════
         function init() {
             const sessionData = getSession();
-            if (sessionData && sessionData.user && sessionData.user.rol === 'admin') {
-                SESSION = sessionData.user;
-                showApp();
-                setDatePreset('today');    // Dashboard hoy
-                setDateRecPreset('today'); // Reclutadoras hoy
-                loadDashboard();
+            if (sessionData && sessionData.user) {
+                if (sessionData.user.rol === 'admin') {
+                    SESSION = sessionData.user;
+                    showApp();
+                    setDatePreset('today');    // Dashboard hoy
+                    setDateRecPreset('today'); // Reclutadoras hoy
+                    loadDashboard();
+                } else {
+                    window.location.href = 'reclutadora.html';
+                }
             }
         }
 

@@ -8,6 +8,21 @@
     <meta name="description" content="Forma parte de nuestra familia NannysPeques. Postúlate como niñera en tu ciudad.">
     <link rel="icon" type="image/png" href="logo-sin-fondo.png">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="js/config.js"></script>
+    <script>
+        // Redirigir si ya hay una sesión activa
+        (function () {
+            const session = getSession();
+            if (session && session.user) {
+                if (session.user.rol === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'reclutadora.html';
+                }
+            }
+        })();
+    </script>
+
     <style>
         /* === HERO SECTION === */
         .hero {
