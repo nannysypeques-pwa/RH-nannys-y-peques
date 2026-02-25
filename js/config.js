@@ -77,7 +77,7 @@ function handleSessionError(msg) {
 /** Obtiene sesión guardada */
 function getSession() {
     try {
-        const raw = sessionStorage.getItem(CONFIG.STORAGE_KEY);
+        const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
         return raw ? JSON.parse(raw) : null;
     } catch { return null; }
 }
@@ -85,7 +85,7 @@ function getSession() {
 /** Guarda sesión (incluyendo token) */
 function saveSession(data) {
     // data puede ser { success: true, token: "...", user: {...} }
-    sessionStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
 }
 
 /** Obtiene datos del usuario de la sesión */
@@ -96,7 +96,7 @@ function getSessionUser() {
 
 /** Cierra sesión */
 function logout() {
-    sessionStorage.removeItem(CONFIG.STORAGE_KEY);
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
 }
 
 /** Genera badge HTML para un estado */
