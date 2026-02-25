@@ -932,12 +932,24 @@
         //  CONTEOS EN SIDEBAR
         // ═══════════════════════════════════════════════
         function updateSidebarCounts() {
-            const counts = { todos: 0, pendiente: 0, aceptado: 0, rechazado: 0, whatsapp: 0, capacitada: 0 };
-            TODAS_CANDIDATAS.forEach(c => {
+            const counts = { todos: 0, pendiente: 0, aceptado: 1, rechazado: 0, whatsapp: 0, capacitada: 0 };
+
+            // Re-inicializamos en ceros
+            Object.keys(counts).forEach(k => counts[k] = 0);
+
+            // Filtramos la lista global por la ciudad seleccionada para los conteos
+            const filteredList = TODAS_CANDIDATAS.filter(c =>
+                currentCiudad === 'todas' || c.ciudad === currentCiudad
+            );
+
+            filteredList.forEach(c => {
                 counts.todos++;
                 const e = c.estado || 'pendiente';
+                // Corregimos inconsistencia de nombres: 'aceptado' vs 'aceptadas' (solo para visualización)
                 if (counts[e] !== undefined) counts[e]++;
             });
+
+            // Actualizar el DOM
             ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp', 'capacitada'].forEach(k => {
                 const el = document.getElementById('count-' + k);
                 if (el) el.textContent = counts[k];
@@ -1354,7 +1366,8 @@
                             ciudad: c.ciudad,
                             dia_sesion: dia,
                             hora_sesion: hora,
-                            semana: week
+                            semana: week,
+                            reclutadoraEmail: SESSION.email // <--- Añadido para privacidad
                         });
                         if (res.success) {
                             showToast('Sesión asignada correctamente');
@@ -1518,7 +1531,8 @@
                 btn.classList.add('active');
                 currentCiudad = btn.dataset.ciudad;
                 if (document.getElementById('sec-seguimiento').classList.contains('hidden')) {
-                    loadCandidatas();
+                    renderCandidatas();
+                    updateSidebarCounts();
                 } else {
                     loadSeguimientoData();
                 }
@@ -1568,7 +1582,9 @@
             try {
                 const result = await apiGet({
                     action: 'getSeguimientoData',
-                    ciudad: currentCiudad !== 'todas' ? currentCiudad : ''
+                    ciudad: currentCiudad !== 'todas' ? currentCiudad : '',
+                    rol: SESSION.rol,     // <--- Añadido
+                    email: SESSION.email  // <--- Añadido para privacidad
                 });
                 if (result.success) {
                     SEGUIMIENTO_DATA = result.data || [];
@@ -1606,6 +1622,7 @@
                         <thead>
                             <tr>
                                 <th>Nombre</th>
+                                <th style="width:80px">Ciudad</th>
                                 <th style="width:100px">WhatsApp</th>
                                 <th style="width:80px">Agendó</th>
                                 <th style="width:40px">E.</th>
@@ -1615,7 +1632,7 @@
                 `;
 
                 if (sessionGirls.length === 0) {
-                    html += `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem">Sin candidatas</td></tr>`;
+                    html += `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">Sin candidatas</td></tr>`;
                 } else {
                     sessionGirls.forEach(g => {
                         const asistioCls = g.asistencia_platica === 'Sí' ? 'track-row-asistio' : '';
@@ -1626,8 +1643,10 @@
                                 <td style="font-weight:700">
                                     <div style="cursor:pointer" onclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')">
                                         ${g.nombre}
-                                        <div style="font-size:0.7rem;font-weight:400;color:var(--text-muted)">${g.ciudad}</div>
                                     </div>
+                                </td>
+                                <td style="font-size:0.75rem;color:var(--text-muted)">
+                                    ${g.ciudad || '—'}
                                 </td>
                                 <td>
                                     <a href="${waLink}" target="_blank" class="badge badge-whatsapp" style="text-decoration:none">💬 Chat</a>
