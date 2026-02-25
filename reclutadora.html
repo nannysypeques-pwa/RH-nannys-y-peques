@@ -706,6 +706,8 @@
 
                     <!-- Sistema de Pestañas de Semana -->
                     <div class="tabs" style="margin-bottom:1.5rem">
+                        <div class="tab-item" data-week="anterior" onclick="switchSeguimientoWeek('anterior')">Semana
+                            Anterior</div>
                         <div class="tab-item active" data-week="actual" onclick="switchSeguimientoWeek('actual')">Esta
                             Semana</div>
                         <div class="tab-item" data-week="proxima" onclick="switchSeguimientoWeek('proxima')">Próxima
@@ -1582,9 +1584,7 @@
             try {
                 const result = await apiGet({
                     action: 'getSeguimientoData',
-                    ciudad: currentCiudad !== 'todas' ? currentCiudad : '',
-                    rol: SESSION.rol,     // <--- Añadido
-                    email: SESSION.email  // <--- Añadido para privacidad
+                    ciudad: '' // <--- Vacío para traer TODO el seguimiento global
                 });
                 if (result.success) {
                     SEGUIMIENTO_DATA = result.data || [];
@@ -1602,11 +1602,10 @@
             grid.innerHTML = '';
 
             SESIONES.forEach(s => {
-                // Filtrar candidatas para esta sesión, la ciudad y la semana seleccionada
+                // Filtrar candidatas para esta sesión y la semana seleccionada (SIN filtrar por ciudad)
                 const sessionGirls = SEGUIMIENTO_DATA.filter(d =>
                     d.dia_sesion === s.dia &&
                     d.hora_sesion === s.hora &&
-                    (currentCiudad === 'todas' || d.ciudad === currentCiudad) &&
                     (d.semana || 'actual') === CURRENT_SEGUIMIENTO_WEEK
                 );
 
