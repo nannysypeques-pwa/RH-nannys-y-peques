@@ -872,30 +872,59 @@
         // ═══════════════════════════════════════════════
         //  CARGAR CANDIDATAS
         // ═══════════════════════════════════════════════
-        async function loadCandidatas() {
-            document.getElementById('candidatas-container').innerHTML = `
-    <div class="loading-overlay">
-      <div class="spinner"></div>
-      <span>Cargando candidatas...</span>
-    </div>`;
+        async function loadCandidatas(force = false) {
+            const container = document.getElementById('candidatas-container');
+            const cacheKey = `cache_candidatas_${SESSION.email}`;
+
+            // 1. Intentar cargar desde Cache (Stale-While-Revalidate)
+            if (!force) {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        const cacheData = JSON.parse(cached);
+                        if (cacheData && cacheData.length > 0) {
+                            TODAS_CANDIDATAS = cacheData;
+                            renderCandidatas();
+                            updateSidebarCounts();
+                            // Si tenemos cache, no mostramos el spinner para que no parpadee
+                        }
+                    } catch (e) { console.error("Error cache", e); }
+                }
+            }
+
+            // Si no hay datos ni en cache ni en memoria, mostrar spinner
+            if (TODAS_CANDIDATAS.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-overlay">
+                      <div class="spinner"></div>
+                      <span>Cargando candidatas...</span>
+                    </div>`;
+            }
 
             try {
-                const params = { action: 'getCandidatas', rol: SESSION.rol, email: SESSION.email };
-                if (currentCiudad !== 'todas') params.ciudad = currentCiudad;
-
-                const result = await apiGet(params);
+                // 2. Carga Global: Siempre descargar todo lo permitido para mantener actualizado
+                // El backend ignora 'ciudad' si mandamos vacío y devuelve todas las permitidas
+                const result = await apiGet({
+                    action: 'getCandidatas',
+                    rol: SESSION.rol,
+                    email: SESSION.email,
+                    ciudad: ''
+                });
 
                 if (result.success) {
                     TODAS_CANDIDATAS = result.data || [];
-                    updateSidebarCounts();
+                    // Actualizar Cache
+                    localStorage.setItem(cacheKey, JSON.stringify(TODAS_CANDIDATAS));
+
                     renderCandidatas();
-                } else {
+                    updateSidebarCounts();
+                } else if (TODAS_CANDIDATAS.length === 0) {
                     showAlert('main-alert', result.message || 'Error al cargar candidatas.');
-                    document.getElementById('candidatas-container').innerHTML = '';
                 }
             } catch (err) {
-                showAlert('main-alert', 'Error de conexión al cargar candidatas.');
-                document.getElementById('candidatas-container').innerHTML = '';
+                if (TODAS_CANDIDATAS.length === 0) {
+                    showAlert('main-alert', 'Error de conexión.');
+                }
             }
         }
 

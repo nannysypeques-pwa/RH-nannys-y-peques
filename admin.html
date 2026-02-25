@@ -885,14 +885,30 @@
         // ═══════════════════════════════════════════════
         //  DASHBOARD — MÉTRICAS
         // ═══════════════════════════════════════════════
-        async function loadDashboard() {
+        async function loadDashboard(force = false) {
+            const cacheKey = `cache_dashboard_${currentFrom}_${currentTo}`;
+
+            // Carga desde cache
+            if (!force) {
+                const cached = localStorage.getItem(cacheKey);
+                if (cached) {
+                    try {
+                        const data = JSON.parse(cached);
+                        renderDashboard(data);
+                    } catch (e) { }
+                }
+            }
+
             try {
                 const result = await apiGet({
                     action: 'getMetrics',
                     from: currentFrom,
                     to: currentTo
                 });
-                if (result.success) renderDashboard(result.data);
+                if (result.success) {
+                    localStorage.setItem(cacheKey, JSON.stringify(result.data));
+                    renderDashboard(result.data);
+                }
             } catch (err) { }
         }
 
