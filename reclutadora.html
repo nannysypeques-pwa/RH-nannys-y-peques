@@ -1117,6 +1117,23 @@
                 html += `<div class="reviewed-note">
                   <div>Candidata revisada por: <strong>${c.revisada_por || '—'}</strong> · ${c.fecha_revision || '—'}</div>
                   ${c.justificacion ? `<div style="margin-top:.4rem;font-style:italic;border-top:1px solid rgba(0,0,0,0.05);padding-top:.4rem">" ${c.justificacion} "</div>` : ''}
+                  ${estado === 'aceptado' ? `
+                  <div style="margin-top:.8rem;border-top:1px solid rgba(0,0,0,0.07);padding-top:.7rem">
+                    <div style="font-weight:700;font-size:.8rem;color:var(--text-muted);margin-bottom:.4rem">📝 Notas del reclutador</div>
+                    <textarea id="nota-reclutadora" rows="3"
+                      style="width:100%;box-sizing:border-box;border:1px solid var(--pink-200);border-radius:var(--r-md);padding:.5rem .7rem;font-size:.83rem;font-family:inherit;resize:vertical;outline:none;transition:border .2s"
+                      placeholder="Agrega notas sobre el proceso de esta candidata..."
+                      onfocus="this.style.borderColor='var(--pink-400)'"
+                      onblur="this.style.borderColor='var(--pink-200)'"
+                    >${c.notas_reclutadora || ''}</textarea>
+                    <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+                      <button id="btn-guardar-nota" class="btn btn-outline" style="font-size:.78rem;padding:.3rem .8rem">
+                        💾 Guardar nota
+                      </button>
+                      <span id="nota-status" style="font-size:.75rem;color:var(--text-muted)"></span>
+                    </div>
+                  </div>
+                  ` : ''}
                 </div>`;
             }
 
@@ -1387,6 +1404,41 @@
                 });
             }
 
+            // ── GUARDAR NOTA ──
+            const btnNota = document.getElementById('btn-guardar-nota');
+            if (btnNota) {
+                btnNota.addEventListener('click', async () => {
+                    const nota = document.getElementById('nota-reclutadora').value;
+                    const notaStatus = document.getElementById('nota-status');
+                    btnNota.disabled = true;
+                    btnNota.textContent = '⏳ Guardando...';
+                    try {
+                        const res = await apiPost({
+                            action: 'saveNota',
+                            ciudad: c.ciudad,
+                            rowIndex: c.rowIndex,
+                            nota
+                        });
+                        if (res.success) {
+                            // Actualizar en memoria
+                            const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
+                            if (idx >= 0) TODAS_CANDIDATAS[idx].notas_reclutadora = nota;
+                            notaStatus.textContent = '✅ Guardada';
+                            notaStatus.style.color = 'var(--green-mid)';
+                        } else {
+                            notaStatus.textContent = '❌ Error al guardar';
+                            notaStatus.style.color = 'var(--red-mid)';
+                        }
+                    } catch {
+                        notaStatus.textContent = '❌ Error de conexión';
+                        notaStatus.style.color = 'var(--red-mid)';
+                    }
+                    btnNota.disabled = false;
+                    btnNota.innerHTML = '💾 Guardar nota';
+                    setTimeout(() => { notaStatus.textContent = ''; }, 3000);
+                });
+            }
+
             document.getElementById('modal-overlay').classList.remove('hidden');
         }
 
@@ -1636,7 +1688,7 @@
                                 <th style="width:80px">Ciudad</th>
                                 <th style="width:100px">WhatsApp</th>
                                 <th style="width:80px">Agendó</th>
-                                <th style="width:52px;text-align:center">E.</th>
+                                <th style="width:44px;text-align:left;padding-left:0">E.</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1668,7 +1720,7 @@
                                         <option value="Sí" ${g.agendo_entrevista === 'Sí' ? 'selected' : ''}>Sí</option>
                                     </select>
                                 </td>
-                                <td style="text-align:center;padding:0.6rem 0.4rem">
+                                <td style="text-align:left;padding:0.6rem 0 0.6rem 0">
                                     <input type="checkbox" style="width:16px;height:16px;cursor:pointer" ${g.asistencia_entrevista === 'Sí' ? 'checked' : ''} onchange="updateTrackField('${g.email}', 'asistencia_entrevista', this.checked ? 'Sí' : 'No')">
                                 </td>
                             </tr>
