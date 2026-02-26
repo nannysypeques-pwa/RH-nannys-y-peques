@@ -1443,6 +1443,18 @@
                     showToast(`Estado actualizado: ${CONFIG.ESTADO_CONFIG[status].label}`);
                     updateSidebarCounts();
                     renderCandidatas();
+                } else if (result.locked) {
+                    // Candado: otra reclutadora ya revisó esta candidata
+                    document.getElementById('modal-overlay').classList.add('hidden');
+                    showToast(`🔒 ${result.message}`, 'error');
+
+                    // Refrescar esta candidata localmente para que desaparezca de la vista
+                    const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
+                    if (idx >= 0) {
+                        TODAS_CANDIDATAS[idx].estado = 'bloqueada'; // Marcamos para que el filtro la oculte
+                    }
+                    updateSidebarCounts();
+                    renderCandidatas();
                 } else {
                     showAlert('main-alert', result.message || 'Error al actualizar estado.');
                     if (btnConfirm) btnConfirm.disabled = false;
@@ -1717,14 +1729,21 @@
         // ═══════════════════════════════════════════════
         //  TOAST
         // ═══════════════════════════════════════════════
-        function showToast(msg) {
+        function showToast(msg, type = 'success') {
             const existing = document.querySelector('.toast');
             if (existing) existing.remove();
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = `<span>✅</span><span>${msg}</span>`;
+            if (type === 'error') {
+                toast.style.background = '#f8d7da';
+                toast.style.color = '#721c24';
+                toast.style.border = '1px solid #f5c6cb';
+                toast.innerHTML = `<span>🔒</span><span>${msg}</span>`;
+            } else {
+                toast.innerHTML = `<span>✅</span><span>${msg}</span>`;
+            }
             document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3500);
+            setTimeout(() => toast.remove(), type === 'error' ? 5000 : 3500);
         }
 
         // ─── Arranque ─────────────────────────────────
