@@ -1375,6 +1375,17 @@
                         });
                         if (res.success) {
                             showToast('Sesión asignada correctamente');
+
+                            // Actualizar la memoria local para que la tarjeta se refresque sigilosamente
+                            const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
+                            if (idx >= 0) {
+                                TODAS_CANDIDATAS[idx].dia_sesion = dia;
+                                TODAS_CANDIDATAS[idx].hora_sesion = hora;
+                            }
+                            c.dia_sesion = dia;
+                            c.hora_sesion = hora;
+                            renderCandidatas(); // Re-dibuja el grid del fondo
+
                             document.getElementById('modal-overlay').classList.add('hidden');
                         } else {
                             alert(res.message);
