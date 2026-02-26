@@ -1636,11 +1636,11 @@
                                 <th style="width:80px">Ciudad</th>
                                 <th style="width:100px">WhatsApp</th>
                                 <th style="width:80px">Agendó</th>
-                                <th style="width:40px">E.</th>
+                                <th style="width:52px;text-align:center">E.</th>
                             </tr>
                         </thead>
                         <tbody>
-                `;
+                `
 
                 if (sessionGirls.length === 0) {
                     html += `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">Sin candidatas</td></tr>`;
@@ -1668,8 +1668,8 @@
                                         <option value="Sí" ${g.agendo_entrevista === 'Sí' ? 'selected' : ''}>Sí</option>
                                     </select>
                                 </td>
-                                <td style="text-align:center">
-                                    <input type="checkbox" ${g.asistencia_entrevista === 'Sí' ? 'checked' : ''} onchange="updateTrackField('${g.email}', 'asistencia_entrevista', this.checked ? 'Sí' : 'No')">
+                                <td style="text-align:center;padding:0.6rem 0.4rem">
+                                    <input type="checkbox" style="width:16px;height:16px;cursor:pointer" ${g.asistencia_entrevista === 'Sí' ? 'checked' : ''} onchange="updateTrackField('${g.email}', 'asistencia_entrevista', this.checked ? 'Sí' : 'No')">
                                 </td>
                             </tr>
                         `;
