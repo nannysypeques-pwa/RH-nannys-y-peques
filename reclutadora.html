@@ -878,7 +878,7 @@
         function init() {
             const sessionData = getSession();
             if (sessionData && sessionData.user) {
-                if (sessionData.user.rol === 'admin') {
+                if (sessionData.user.rol === 'admin' || sessionData.user.rol === 'coordinacion') {
                     window.location.href = 'admin.html';
                     return;
                 }
@@ -910,7 +910,7 @@
                 if (result.success) {
                     saveSession(result); // Guarda {success, token, user}
                     SESSION = result.user;
-                    if (SESSION.rol === 'admin') {
+                    if (SESSION.rol === 'admin' || SESSION.rol === 'coordinacion') {
                         window.location.href = 'admin.html';
                         return;
                     }

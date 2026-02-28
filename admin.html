@@ -508,6 +508,20 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+
+        /* ─── Desempeño ─── */
+        .perf-item {
+            background: var(--surface);
+            border-radius: var(--r-md);
+            border: 1px solid var(--border);
+            padding: 0.8rem;
+            transition: all var(--transition);
+        }
+
+        .perf-item:hover {
+            border-color: var(--pink-200);
+            background: var(--pink-50);
+        }
     </style>
 </head>
 
@@ -566,7 +580,7 @@
                     <div class="user-avatar" id="user-initial">A</div>
                     <div>
                         <div class="user-name-disp" id="user-name-display">—</div>
-                        <div class="user-role-disp">Administradora</div>
+                        <div class="user-role-disp" id="user-role-display-text">Administradora</div>
                     </div>
                 </div>
                 <button class="btn btn-sm btn-outline" id="logout-btn">Salir</button>
@@ -576,6 +590,7 @@
         <!-- Tabs de navegación -->
         <nav class="admin-nav">
             <button class="nav-tab active" data-tab="dashboard" id="tab-dashboard">📊 Dashboard</button>
+            <button class="nav-tab" data-tab="desempeno" id="tab-desempeno">📈 Desempeño</button>
             <button class="nav-tab" data-tab="reclutadoras" id="tab-reclutadoras">👩‍💼 Reclutadoras</button>
             <button class="nav-tab" data-tab="usuarios" id="tab-usuarios">⚙️ Gestión de Usuarios</button>
         </nav>
@@ -721,6 +736,25 @@
             </div>
         </div>
 
+        <!-- ─── TAB: DESEMPEÑO ─── -->
+        <div id="tab-content-desempeno" class="panel-content" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                <div class="section-title" style="margin:0">📈 Desempeño por Ciudad</div>
+                <button class="btn btn-sm btn-outline" id="refresh-perf-btn">🔄 Actualizar</button>
+            </div>
+            <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem">
+                Seguimiento del embudo: Postulaciones → Invitadas → Conectadas → Entrevistas.
+            </p>
+            <div id="performance-grid"
+                style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:1.5rem">
+                <!-- Se llena dinámicamente -->
+                <div class="loading-overlay" style="padding:4rem">
+                    <div class="spinner"></div>
+                    <span>Cargando métricas de desempeño...</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -757,6 +791,7 @@
                         <label class="form-label">Rol</label>
                         <select class="form-control" id="nu-rol">
                             <option value="reclutadora">Reclutadora</option>
+                            <option value="coordinacion">Coordinación</option>
                             <option value="admin">Administradora</option>
                         </select>
                     </div>
@@ -798,7 +833,7 @@
         function init() {
             const sessionData = getSession();
             if (sessionData && sessionData.user) {
-                if (sessionData.user.rol === 'admin') {
+                if (sessionData.user.rol === 'admin' || sessionData.user.rol === 'coordinacion') {
                     SESSION = sessionData.user;
                     showApp();
                     setDatePreset('today');    // Dashboard hoy
@@ -825,8 +860,8 @@
             try {
                 const result = await apiPost({ action: 'login', email, password: pass });
                 if (result.success) {
-                    if (result.user.rol !== 'admin') {
-                        showAlert('login-alert', 'Esta cuenta no tiene permisos de administración.');
+                    if (result.user.rol !== 'admin' && result.user.rol !== 'coordinacion') {
+                        showAlert('login-alert', 'Esta cuenta no tiene permisos de administración o coordinación.');
                         btn.disabled = false;
                         btn.innerHTML = 'Acceder al panel';
                         return;
@@ -862,6 +897,14 @@
             app.classList.add('visible');
             document.getElementById('user-name-display').textContent = SESSION.nombre || SESSION.email;
             document.getElementById('user-initial').textContent = (SESSION.nombre || 'A')[0].toUpperCase();
+
+            // Si es coordinación, ocultar tab de usuarios
+            if (SESSION.rol === 'coordinacion') {
+                document.getElementById('tab-usuarios').style.display = 'none';
+                document.getElementById('user-role-display-text').textContent = 'Coordinación';
+            } else {
+                document.getElementById('user-role-display-text').textContent = 'Administradora';
+            }
         }
 
         document.getElementById('logout-btn').addEventListener('click', () => { logout(); window.location.reload(); });
@@ -879,6 +922,7 @@
                 document.getElementById('tab-content-' + tabName).style.display = 'block';
 
                 if (tabName === 'reclutadoras') loadReclutadoras();
+                if (tabName === 'desempeno') loadPerformanceMetrics();
             });
         });
 
@@ -978,6 +1022,117 @@
                 }
             });
         });
+
+        // ═══════════════════════════════════════════════
+        //  DESEMPEÑO POR CIUDAD
+        // ═══════════════════════════════════════════════
+        async function loadPerformanceMetrics() {
+            const grid = document.getElementById('performance-grid');
+            grid.innerHTML = `<div class="loading-overlay" style="padding:4rem"><div class="spinner"></div><span>Cargando métricas de desempeño...</span></div>`;
+
+            try {
+                const result = await apiGet({
+                    action: 'getCityPerformanceMetrics',
+                    from: currentFrom,
+                    to: currentTo
+                });
+                if (result.success) {
+                    renderPerformanceMetrics(result.data);
+                } else {
+                    grid.innerHTML = `<p style="padding:2rem;text-align:center;color:var(--red-mid)">${result.message || 'Error al cargar métricas'}</p>`;
+                }
+            } catch (err) {
+                grid.innerHTML = `<p style="padding:2rem;text-align:center;color:var(--red-mid)">Error de conexión</p>`;
+            }
+        }
+
+        function renderPerformanceMetrics(data) {
+            const grid = document.getElementById('performance-grid');
+            const ciudades = CONFIG.CIUDADES;
+
+            const html = ciudades.map(ciudad => {
+                const d = data[ciudad] || { formularios: 0, invitadas: 0, conectaron: 0, programadas: 0, entrevistadas: 0 };
+
+                // Cálculo de conversiones
+                const convInvitadas = d.formularios > 0 ? Math.round((d.invitadas / d.formularios) * 100) : 0;
+                const convConectaron = d.invitadas > 0 ? Math.round((d.conectaron / d.invitadas) * 100) : 0;
+                const convEntrevistas = d.conectaron > 0 ? Math.round((d.programadas / d.conectaron) * 100) : 0;
+                const convEfectivas = d.programadas > 0 ? Math.round((d.entrevistadas / d.programadas) * 100) : 0;
+
+                return `
+                <div class="city-table-card" style="padding:1.6rem">
+                    <div style="display:flex;align-items:center;gap:0.7rem;margin-bottom:1.5rem">
+                        <span style="font-size:1.8rem">${CONFIG.CIUDAD_EMOJI[ciudad]}</span>
+                        <div>
+                            <h3 style="margin:0;font-size:1.1rem;font-weight:900">${ciudad}</h3>
+                            <span style="font-size:0.75rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em">Embudo de Reclutamiento</span>
+                        </div>
+                    </div>
+
+                    <div style="display:flex;flex-direction:column;gap:1.2rem">
+                        <!-- Formularios -->
+                        <div class="perf-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+                                <span style="font-size:0.82rem;font-weight:800;color:var(--text-h)">📝 Formularios Recibidos</span>
+                                <span style="font-size:1rem;font-weight:900;color:var(--pink-500)">${d.formularios}</span>
+                            </div>
+                        </div>
+
+                        <!-- Invitadas -->
+                        <div class="perf-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;align-items:baseline">
+                                <span style="font-size:0.82rem;font-weight:700;color:var(--text-body)">📢 Invitadas a Reunión</span>
+                                <span style="font-size:0.9rem;font-weight:800">${d.invitadas}</span>
+                            </div>
+                            <div class="conversion-bar-wrap">
+                                <div class="conversion-bar-bg"><div class="conversion-bar-fill" style="width:${convInvitadas}%"></div></div>
+                                <span style="font-size:0.7rem;font-weight:800;color:var(--text-muted);width:30px">${convInvitadas}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Conectaron -->
+                        <div class="perf-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;align-items:baseline">
+                                <span style="font-size:0.82rem;font-weight:700;color:var(--text-body)">💻 Chicas que se conectaron</span>
+                                <span style="font-size:0.9rem;font-weight:800">${d.conectaron}</span>
+                            </div>
+                            <div class="conversion-bar-wrap">
+                                <div class="conversion-bar-bg"><div class="conversion-bar-fill" style="width:${convConectaron}%;background:linear-gradient(90deg, #74b9ff, #0984e3)"></div></div>
+                                <span style="font-size:0.7rem;font-weight:800;color:var(--text-muted);width:30px">${convConectaron}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Programadas -->
+                        <div class="perf-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;align-items:baseline">
+                                <span style="font-size:0.82rem;font-weight:700;color:var(--text-body)">🤝 Entrevistas Programadas</span>
+                                <span style="font-size:0.9rem;font-weight:800">${d.programadas}</span>
+                            </div>
+                            <div class="conversion-bar-wrap">
+                                <div class="conversion-bar-bg"><div class="conversion-bar-fill" style="width:${convEntrevistas}%;background:linear-gradient(90deg, #ffeaa7, #fdcb6e)"></div></div>
+                                <span style="font-size:0.7rem;font-weight:800;color:var(--text-muted);width:30px">${convEntrevistas}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Entrevistadas -->
+                        <div class="perf-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:0.3rem;align-items:baseline">
+                                <span style="font-size:0.82rem;font-weight:700;color:var(--text-body)">🏆 Entrevistas Efectivas</span>
+                                <span style="font-size:0.9rem;font-weight:800">${d.entrevistadas}</span>
+                            </div>
+                            <div class="conversion-bar-wrap">
+                                <div class="conversion-bar-bg"><div class="conversion-bar-fill" style="width:${convEfectivas}%;background:linear-gradient(90deg, #55efc4, #00b894)"></div></div>
+                                <span style="font-size:0.7rem;font-weight:800;color:var(--text-muted);width:30px">${convEfectivas}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            grid.innerHTML = html;
+        }
+
+        document.getElementById('refresh-perf-btn').addEventListener('click', () => loadPerformanceMetrics());
 
         document.getElementById('btn-apply-custom').addEventListener('click', () => {
             currentFrom = document.getElementById('filter-from').value;
@@ -1264,7 +1419,15 @@
         });
 
         // Refresh
-        document.getElementById('refresh-btn').addEventListener('click', loadDashboard);
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            loadDashboard(true);
+            if (document.getElementById('tab-reclutadoras').classList.contains('active')) {
+                loadReclutadoras();
+            }
+            if (document.getElementById('tab-desempeno').classList.contains('active')) {
+                loadPerformanceMetrics();
+            }
+        });
 
         // ═══════════════════════════════════════════════
         //  TOAST
