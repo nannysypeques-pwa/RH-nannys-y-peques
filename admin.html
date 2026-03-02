@@ -742,6 +742,21 @@
                 <div class="section-title" style="margin:0">📈 Desempeño por Ciudad</div>
                 <button class="btn btn-sm btn-outline" id="refresh-perf-btn">🔄 Actualizar</button>
             </div>
+
+            <!-- Barra de Filtros Desempeño -->
+            <div class="filter-bar" style="margin-bottom:1.5rem">
+                <div class="filter-presets">
+                    <button class="btn-filter btn-filter-perf" data-preset="all">Todo</button>
+                    <button class="btn-filter btn-filter-perf active" data-preset="today">Hoy</button>
+                    <button class="btn-filter btn-filter-perf" data-preset="week">Última semana</button>
+                    <button class="btn-filter btn-filter-perf" data-preset="month">Este mes</button>
+                </div>
+                <div class="filter-custom">
+                    Desde: <input type="date" id="filter-perf-from" class="date-input">
+                    Hasta: <input type="date" id="filter-perf-to" class="date-input">
+                    <button class="btn btn-sm btn-primary" id="btn-apply-perf-custom">Aplicar</button>
+                </div>
+            </div>
             <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem">
                 Seguimiento del embudo: Postulaciones → Invitadas → Conectadas → Entrevistas.
             </p>
@@ -827,6 +842,10 @@
         let currentRecFrom = '';
         let currentRecTo = '';
 
+        // Estado Desempeño
+        let currentPerfFrom = '';
+        let currentPerfTo = '';
+
         // ═══════════════════════════════════════════════
         //  INIT
         // ═══════════════════════════════════════════════
@@ -838,6 +857,7 @@
                     showApp();
                     setDatePreset('today');    // Dashboard hoy
                     setDateRecPreset('today'); // Reclutadoras hoy
+                    setDatePerfPreset('today'); // Desempeño hoy
                     loadDashboard();
                 } else {
                     window.location.href = 'reclutadora.html';
@@ -1033,8 +1053,8 @@
             try {
                 const result = await apiGet({
                     action: 'getCityPerformanceMetrics',
-                    from: currentFrom,
-                    to: currentTo
+                    from: currentPerfFrom,
+                    to: currentPerfTo
                 });
                 if (result.success) {
                     renderPerformanceMetrics(result.data);
@@ -1188,6 +1208,55 @@
             currentRecTo = document.getElementById('filter-rec-to').value;
             document.querySelectorAll('.btn-filter-rec').forEach(btn => btn.classList.remove('active'));
             loadReclutadoras();
+        });
+
+        // ═══════════════════════════════════════════════
+        //  FILTROS DE DESEMPEÑO
+        // ═══════════════════════════════════════════════
+        function setDatePerfPreset(preset) {
+            const now = new Date();
+            let from = '';
+            let to = '';
+
+            if (preset === 'today') {
+                from = getLocalDateString(now);
+                to = from;
+            } else if (preset === 'week') {
+                const lastWeek = new Date();
+                lastWeek.setDate(now.getDate() - 7);
+                from = getLocalDateString(lastWeek);
+                to = getLocalDateString(now);
+            } else if (preset === 'month') {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                from = getLocalDateString(firstDay);
+                to = getLocalDateString(now);
+            } else if (preset === 'all') {
+                from = '';
+                to = '';
+            }
+
+            currentPerfFrom = from;
+            currentPerfTo = to;
+            document.getElementById('filter-perf-from').value = from;
+            document.getElementById('filter-perf-to').value = to;
+
+            document.querySelectorAll('.btn-filter-perf').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.preset === preset);
+            });
+        }
+
+        document.querySelectorAll('.btn-filter-perf').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setDatePerfPreset(btn.dataset.preset);
+                loadPerformanceMetrics();
+            });
+        });
+
+        document.getElementById('btn-apply-perf-custom').addEventListener('click', () => {
+            currentPerfFrom = document.getElementById('filter-perf-from').value;
+            currentPerfTo = document.getElementById('filter-perf-to').value;
+            document.querySelectorAll('.btn-filter-perf').forEach(btn => btn.classList.remove('active'));
+            loadPerformanceMetrics();
         });
 
         function renderDashboard(data) {
