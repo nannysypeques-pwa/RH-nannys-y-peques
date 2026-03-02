@@ -853,8 +853,16 @@
         // Helper para parsear fecha de Sheets "dd/MM/yyyy HH:mm"
         function parseSheetDate(str) {
             if (!str || str === '-') return null;
+            if (str instanceof Date) return str;
             try {
-                const [dPart, tPart] = str.split(' ');
+                const s = str.toString().trim();
+                // Si parece ISO
+                if (s.includes('T') || (s.includes('-') && !s.includes('/'))) {
+                    const d = new Date(s);
+                    return isNaN(d.getTime()) ? null : d;
+                }
+                // Formato dd/MM/yyyy HH:mm
+                const [dPart, tPart] = s.split(' ');
                 const [d, m, y] = dPart.split('/').map(Number);
                 if (tPart) {
                     const [h, min] = tPart.split(':').map(Number);
@@ -1757,6 +1765,28 @@
             { dia: 'Sábado', hora: '2:00 PM', color: '#00BCD4' }
         ];
 
+        function getWeekRange(referencia) {
+            const now = new Date();
+            const day = now.getDay();
+            const diffToMonday = (day === 0 ? -6 : 1) - day;
+            const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+            monday.setHours(0, 0, 0, 0);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+
+            if (referencia === 'proxima') {
+                monday.setDate(monday.getDate() + 7);
+                sunday.setDate(sunday.getDate() + 14); // Ver todo lo futuro desde el lunes que viene
+            } else if (referencia === 'anterior') {
+                monday.setDate(monday.getDate() - 30); // Ver hasta un mes atrás
+                sunday.setDate(sunday.getDate() - 7);
+            }
+
+            return { start: monday, end: sunday };
+        }
+
         async function loadSeguimientoData() {
             const grid = document.getElementById('seguimiento-grid');
             grid.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando seguimiento...</span></div>';
@@ -1779,15 +1809,28 @@
 
         function renderSeguimiento() {
             const grid = document.getElementById('seguimiento-grid');
+            const range = getWeekRange(CURRENT_SEGUIMIENTO_WEEK);
             grid.innerHTML = '';
 
             SESIONES.forEach(s => {
-                // Filtrar candidatas para esta sesión y la semana seleccionada (SIN filtrar por ciudad)
-                const sessionGirls = SEGUIMIENTO_DATA.filter(d =>
-                    d.dia_sesion === s.dia &&
-                    d.hora_sesion === s.hora &&
-                    (d.semana || 'actual') === CURRENT_SEGUIMIENTO_WEEK
-                );
+                // Filtrar candidatas para esta sesión y la semana seleccionada
+                const sessionGirls = SEGUIMIENTO_DATA.filter(d => {
+                    if (d.dia_sesion !== s.dia || d.hora_sesion !== s.hora) return false;
+
+                    const fSesion = parseSheetDate(d.fecha_sesion);
+                    if (!fSesion) {
+                        // Fallback por si hay datos viejos sin fecha_sesion, usamos el campo 'semana'
+                        return (d.semana || 'actual') === CURRENT_SEGUIMIENTO_WEEK;
+                    }
+
+                    if (CURRENT_SEGUIMIENTO_WEEK === 'anterior') {
+                        return fSesion < range.end;
+                    } else if (CURRENT_SEGUIMIENTO_WEEK === 'proxima') {
+                        return fSesion > range.start;
+                    } else {
+                        return fSesion >= range.start && fSesion <= range.end;
+                    }
+                });
 
                 const card = document.createElement('div');
                 card.className = 'track-card';
