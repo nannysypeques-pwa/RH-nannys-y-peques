@@ -2542,9 +2542,9 @@
 
                             html += `
                                 <tr class="${asistioCls}">
-                                    <td style="font-weight:700">
+                                    <td style="font-weight:700; cursor:pointer;" ondblclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')" title="Doble clic para marcar asistencia">
                                         <div class="phone-tooltip-wrapper">
-                                            <div style="cursor:pointer" onclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')">
+                                            <div>
                                                 ${g.nombre}
                                             </div>
                                             <div class="phone-tooltip">

@@ -234,6 +234,11 @@
             <div id="alert-container" class="mb-3"></div>
 
             <form id="candidata-form" novalidate>
+                <!-- Oculto para atrapar bots (Honeypot) - Si esto se llena, el backend lo bloquea -->
+                <div style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
+                    <label for="_honeypot">Website URL (do not fill this out)</label>
+                    <input type="text" id="_honeypot" name="_honeypot" tabindex="-1" autocomplete="off" placeholder="Leave empty">
+                </div>
                 <input type="hidden" id="ciudad-input">
 
                 <!-- ═══ SECCIÓN 1: IDENTIFICACIÓN ═══ -->

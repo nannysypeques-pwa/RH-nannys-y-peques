@@ -492,6 +492,7 @@ function collectFormData() {
 
     return {
         action: 'submitForm',
+        _honeypot: val('_honeypot'), // Campo oculto anti-bots
         ciudad,
         nombre: val('nombre'),
         email: val('email'),
