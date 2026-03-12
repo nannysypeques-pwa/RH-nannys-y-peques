@@ -658,6 +658,108 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ─── Interview Modal Styles ─── */
+        .modal-interview {
+            max-width: 950px !important;
+            width: 95% !important;
+        }
+
+        .interview-section {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .interview-section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #9333ea;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f3e8ff;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .interview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .interview-field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .interview-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .interview-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .interview-input {
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .interview-input:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+
+        .interview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .interview-table th,
+        .interview-table td {
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .interview-table th {
+            background: #faf5ff;
+            font-weight: 800;
+            color: #7e22ce;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.3rem;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -746,10 +848,13 @@
                     <button class="sb-btn" data-filter="aceptado" data-view="listado" id="sb-aceptado">
                         ✅ En Proceso <span class="sb-count green" id="count-aceptado">0</span>
                     </button>
+                    <button class="sb-btn" data-view="seguimiento">📅 Seguimiento</button>
+                    <button class="sb-btn" data-filter="entrevista" data-view="listado" id="sb-entrevista">
+                        🤝 Entrevistas <span class="sb-count pink" id="count-entrevista">0</span>
+                    </button>
                     <button class="sb-btn" data-filter="capacitada" data-view="listado" id="sb-capacitada">
                         ⭐ Aceptadas <span class="sb-count blue" id="count-capacitada">0</span>
                     </button>
-                    <button class="sb-btn" data-view="seguimiento">📅 Seguimiento</button>
                     <button class="sb-btn" data-filter="rechazado" data-view="listado" id="sb-rechazado">
                         ❌ Rechazadas <span class="sb-count red" id="count-rechazado">0</span>
                     </button>
@@ -1054,7 +1159,7 @@
         //  CONTEOS EN SIDEBAR
         // ═══════════════════════════════════════════════
         function updateSidebarCounts() {
-            const counts = { todos: 0, pendiente: 0, aceptado: 1, rechazado: 0, whatsapp: 0, capacitada: 0 };
+            const counts = { todos: 0, pendiente: 0, aceptado: 1, rechazado: 0, whatsapp: 0, capacitada: 0, entrevista: 0 };
 
             // Re-inicializamos en ceros
             Object.keys(counts).forEach(k => counts[k] = 0);
@@ -1069,10 +1174,15 @@
                 const e = c.estado || 'pendiente';
                 // Corregimos inconsistencia de nombres: 'aceptado' vs 'aceptadas' (solo para visualización)
                 if (counts[e] !== undefined) counts[e]++;
+
+                // Conteo virtual de entrevistas agendadas (excluyendo rechazadas)
+                if (c.agendo_entrevista && c.agendo_entrevista !== '-' && e !== 'rechazado') {
+                    counts.entrevista++;
+                }
             });
 
             // Actualizar el DOM
-            ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp', 'capacitada'].forEach(k => {
+            ['todos', 'pendiente', 'aceptado', 'rechazado', 'whatsapp', 'capacitada', 'entrevista'].forEach(k => {
                 const el = document.getElementById('count-' + k);
                 if (el) el.textContent = counts[k];
             });
@@ -1085,7 +1195,9 @@
             let list = [...TODAS_CANDIDATAS];
 
             // Filtro por estado
-            if (currentFilter !== 'todos') {
+            if (currentFilter === 'entrevista') {
+                list = list.filter(c => c.agendo_entrevista && c.agendo_entrevista !== '-' && c.estado !== 'rechazado');
+            } else if (currentFilter !== 'todos') {
                 list = list.filter(c => (c.estado || 'pendiente') === currentFilter);
             }
 
@@ -1181,12 +1293,380 @@
       ${estado === 'aceptado' ? `<div><button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect(this, '${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button></div>` : ''}
       <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
     </div>
+    ${currentFilter === 'entrevista' ? `
+    <div style="padding:0.6rem 1.2rem 1.2rem;">
+        <button class="btn btn-primary w-full" style="background:#9333ea;border-color:#9333ea;font-size:0.85rem;padding:0.6rem" 
+                onclick="event.stopPropagation(); openInterviewForm('${c.email}', '${c.nombre}', '${telefono}')">
+            📋 Realizar Entrevista
+        </button>
+    </div>
+    ` : ''}
   </div>`;
         }
 
-        // ═══════════════════════════════════════════════
-        //  MODAL DE CANDIDATA
-        // ═══════════════════════════════════════════════
+
+
+
+        async function openInterviewForm(email, nombre, telefono) {
+            const container = document.getElementById('modal-interview-container');
+            const body = document.getElementById('interview-form-body');
+            const title = document.getElementById('interview-candidate-name');
+
+            title.textContent = nombre;
+            body.innerHTML = '<div class="loading-overlay" style="padding:2rem;text-align:center;"><div class="spinner" style="margin:0 auto 1rem"></div><span>Cargando entrevista...</span></div>';
+            container.classList.remove('hidden');
+
+            let existingData = {};
+            try {
+                const res = await apiGet({ action: 'getEntrevista', email });
+                if (res.success) existingData = res.data;
+            } catch (e) { console.error("Error cargando entrevista", e); }
+
+            // Generar HTML del formulario extenso
+            body.innerHTML = `
+                <form id="interview-form-data">
+                    <input type="hidden" name="email" value="${email}">
+                    <input type="hidden" name="nombre" value="${nombre}">
+                    
+                    <!-- SECCIÓN 1: INFORMACIÓN GENERAL -->
+                    <div class="interview-section">
+                        <div class="interview-section-title">👩 Información Personal</div>
+                        <div class="interview-grid">
+                            <div class="interview-field"><label class="interview-label">Vacante</label><input type="text" name="vacante" class="interview-input" value="${existingData.vacante || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Teléfono</label><input type="text" name="telefono" class="interview-input" value="${existingData.telefono || telefono}"></div>
+                            <div class="interview-field"><label class="interview-label">Fecha de Entrevista</label><input type="date" name="fecha_entrevista" class="interview-input" value="${existingData.fecha_entrevista ? new Date(existingData.fecha_entrevista).toISOString().split('T')[0] : ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Cómo le gusta que le digan?</label><input type="text" name="como_le_gusta_que_le_digan" class="interview-input" value="${existingData.como_le_gusta_que_le_digan || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Lugar de Nacimiento</label><input type="text" name="lugar_nacimiento" class="interview-input" value="${existingData.lugar_nacimiento || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">Dirección</label><input type="text" name="direccion" class="interview-input" value="${existingData.direccion || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Qué tiempo lleva viviendo aquí y motivo?</label><input type="text" name="tiempo_en_ciudad_motivo" class="interview-input" value="${existingData.tiempo_en_ciudad_motivo || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Estado Civil</label><input type="text" name="estado_civil" class="interview-input" value="${existingData.estado_civil || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Novio/Pareja</label><input type="text" name="novio_pareja" class="interview-input" value="${existingData.novio_pareja || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Tiempo de relación</label><input type="text" name="tiempo_relacion" class="interview-input" value="${existingData.tiempo_relacion || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Estudio/Trabajo de pareja</label><input type="text" name="estudio_trabajo_pareja" class="interview-input" value="${existingData.estudio_trabajo_pareja || ''}"></div>
+                            <div class="interview-field">
+                                <label class="interview-label">¿Hijos?</label>
+                                <div class="radio-group">
+                                    <label class="radio-item"><input type="radio" name="hijos_si_no" value="Sí" ${existingData.hijos_si_no === 'Sí' ? 'checked' : ''}> Sí</label>
+                                    <label class="radio-item"><input type="radio" name="hijos_si_no" value="No" ${existingData.hijos_si_no === 'No' ? 'checked' : ''}> No</label>
+                                </div>
+                            </div>
+                            <div class="interview-field"><label class="interview-label">¿Cuántos?</label><input type="text" name="hijos_cuantos" class="interview-input" value="${existingData.hijos_cuantos || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Con quién se quedan?</label><input type="text" name="quien_se_queda_a_cargo" class="interview-input" value="${existingData.quien_se_queda_a_cargo || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Con quién vives y ocupaciones?</label><textarea name="con_quien_vive_ocupaciones" class="interview-input" rows="2">${existingData.con_quien_vive_ocupaciones || ''}</textarea></div>
+                            <div class="interview-field"><label class="interview-label">Estado de salud</label><select name="estado_salud" class="interview-input"><option value="">-- Selecciona --</option><option ${existingData.estado_salud === 'Excelente' ? 'selected' : ''}>Excelente</option><option ${existingData.estado_salud === 'Bueno' ? 'selected' : ''}>Bueno</option><option ${existingData.estado_salud === 'Regular' ? 'selected' : ''}>Regular</option><option ${existingData.estado_salud === 'Malo' ? 'selected' : ''}>Malo</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Medio de transporte</label><input type="text" name="medio_transporte" class="interview-input" value="${existingData.medio_transporte || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Te ubicas por la ciudad?</label><input type="text" name="se_ubica_en_ciudad" class="interview-input" value="${existingData.se_ubica_en_ciudad || ''}"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 2: FORMACIÓN ACADÉMICA -->
+                    <div class="interview-section">
+                        <div class="interview-section-title">🎓 Información Académica</div>
+                        <div class="interview-grid">
+                            <div class="interview-field"><label class="interview-label">¿Estudia actualmente?</label><select name="estudia_si_no" class="interview-input"><option value="">--</option><option ${existingData.estudia_si_no === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.estudia_si_no === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Último grado</label><input type="text" name="ultimo_grado" class="interview-input" value="${existingData.ultimo_grado || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Donde estudió</label><input type="text" name="donde_estudia" class="interview-input" value="${existingData.donde_estudia || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Horarios clase</label><input type="text" name="horarios_clase" class="interview-input" value="${existingData.horarios_clase || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Semestre</label><input type="text" name="semestre" class="interview-input" value="${existingData.semestre || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Generación</label><input type="text" name="generacion" class="interview-input" value="${existingData.generacion || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Realizó PP y SS?</label><input type="text" name="realizo_pp_ss" class="interview-input" value="${existingData.realizo_pp_ss || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Cuenta con título y cédula?</label><input type="text" name="titulo_cedula" class="interview-input" value="${existingData.titulo_cedula || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Por qué elegiste esa carrera?</label><input type="text" name="por_que_eligio_carrera" class="interview-input" value="${existingData.por_que_eligio_carrera || ''}"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 3: EXPERIENCIA -->
+                    <div class="interview-section">
+                        <div class="interview-section-title">👶 Experiencia Profesional / Académica</div>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;">Describe los últimos 3 lugares de trabajo o prácticas.</p>
+                        
+                        <div id="experience-blocks-container">
+                            <!-- Los bloques de experiencia se generarán aquí -->
+                        </div>
+
+                        <div style="text-align:center; margin-bottom: 2rem;">
+                            <button type="button" class="btn btn-outline" id="add-experience-btn" style="border-style: dashed; border-width: 2px; width: 100%; color: var(--blue-500); border-color: var(--blue-300);">
+                                ➕ Agregar experiencia adicional
+                            </button>
+                        </div>
+
+                        <div class="interview-grid">
+                            <div class="interview-field full"><label class="interview-label">¿Donde generaste tu experiencia con bebés?</label><input type="text" name="exp_bebes_donde" class="interview-input" value="${existingData.exp_bebes_donde || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Pañal</label><select name="panal" class="interview-input"><option value="">--</option><option ${existingData.panal === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.panal === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Biberón</label><select name="biberon" class="interview-input"><option value="">--</option><option ${existingData.biberon === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.biberon === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Baño</label><select name="banio" class="interview-input"><option value="">--</option><option ${existingData.banio === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.banio === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Estimulación</label><select name="estimulacion" class="interview-input"><option value="">--</option><option ${existingData.estimulacion === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.estimulacion === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field"><label class="interview-label">Control de esfínteres</label><select name="control_esfinteres" class="interview-input"><option value="">--</option><option ${existingData.control_esfinteres === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.control_esfinteres === 'No' ? 'selected' : ''}>No</option></select></div>
+                            <div class="interview-field full"><label class="interview-label">¿Algo que se dificulte al trabajar con bebés?</label><input type="text" name="dificultad_bebes" class="interview-input" value="${existingData.dificultad_bebes || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Por qué le llama la atención el empleo de Nanny?</label><input type="text" name="atencion_nanny" class="interview-input" value="${existingData.atencion_nanny || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Por dónde te enteraste del empleo?</label><input type="text" name="donde_se_entero" class="interview-input" value="${existingData.donde_se_entero || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Qué disfrutas de trabajar con niños?</label><input type="text" name="que_disfrutas_ninos" class="interview-input" value="${existingData.que_disfrutas_ninos || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Con qué edad tienes mayor exp.?</label><input type="text" name="edades_mayor_exp" class="interview-input" value="${existingData.edades_mayor_exp || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Cursos o capacitaciones involucradas con niños?</label><input type="text" name="cursos_capacitaciones" class="interview-input" value="${existingData.cursos_capacitaciones || ''}"></div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN 4: COMPETENCIAS -->
+                    <div class="interview-section">
+                        <div class="interview-section-title">⚖️ Competencias y Casos</div>
+                        <table class="interview-table">
+                            <thead><tr><th>Pregunta</th><th>Respuesta</th></tr></thead>
+                            <tbody>
+                                ${[
+                    { k: 'comp_atencion_clientes', q: '¿Para ti qué es atención a clientes?' },
+                    { k: 'comp_responsabilidad', q: '¿Para ti qué es responsabilidad?' },
+                    { k: 'comp_confianza_peque', q: '¿Qué harías para ganarte la confianza de un peque?' },
+                    { k: 'comp_rechazo_peque', q: 'Si un peque te rechaza, ¿qué harías?' },
+                    { k: 'comp_dos_peques_diferentes', q: '¿Qué harías si en un servicio te toca ir con dos peques y quieren hacer actividades diferentes?' },
+                    { k: 'comp_tv_tablet', q: '¿Qué harías si un peque no quiere hacer la actividad planeada y quiere ver la tele?' },
+                    { k: 'comp_sangrado_cabeza', q: '¿Qué harías si un peque se golpea y comienza a sangrar de la cabeza?' },
+                    { k: 'comp_bebe_temperatura', q: '¿Qué harías con un bebés que tiene temperatura?' },
+                    { k: 'comp_berrinches_agresion', q: '¿Cómo manejar los berrinches si te quieren agredir?' },
+                    { k: 'comp_comentarios_negativos', q: '¿Qué harías si la familia te hace comentarios negativos sobre tu trabajo?' },
+                    { k: 'comp_estres_dificiles', q: '¿Cómo manejas el estrés en situaciones difíciles?' },
+                    { k: 'comp_5_areas_desarrollo', q: '¿Qué actividad de alguna de las 5 áreas del desarrollo le pondrías a un peque?' },
+                    { k: 'comp_actividades_nino_edad', q: '¿Qué actividades harías con un niño de _____ años/meses?' },
+                    { k: 'vision_6_meses', q: '¿Cómo te ves en 6 meses?' },
+                    { k: 'nueva_oportunidad_laboral', q: 'En caso de presentarse una nueva oportunidad laboral, ¿qué harías?' }
+                ].map(p => `<tr><td style="width:40%">${p.q}</td><td><textarea name="${p.k}" class="interview-input" rows="2">${existingData[p.k] || ''}</textarea></td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- SECCIÓN 5: CIERRE -->
+                    <div class="interview-section">
+                        <div class="interview-section-title">🏁 Cierre y Finalización</div>
+                        <div class="interview-grid">
+                            <div class="interview-field full"><label class="interview-label">Principales intereses y pasatiempos</label><input type="text" name="intereses_pasatiempos" class="interview-input" value="${existingData.intereses_pasatiempos || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">Mayor logro personal o profesional</label><input type="text" name="mayor_logro" class="interview-input" value="${existingData.mayor_logro || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">Fortalezas</label><input type="text" name="fortalezas" class="interview-input" value="${existingData.fortalezas || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">Áreas de oportunidad</label><input type="text" name="areas_oportunidad" class="interview-input" value="${existingData.areas_oportunidad || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Disponibilidad para laborar</label><input type="text" name="disponibilidad_laborar" class="interview-input" value="${existingData.disponibilidad_laborar || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Por cuánto tiempo?</label><input type="text" name="por_cuanto_tiempo" class="interview-input" value="${existingData.por_cuanto_tiempo || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Qué tiempo te ves trabajando en la agencia?</label><input type="text" name="tiempo_en_agencia" class="interview-input" value="${existingData.tiempo_en_agencia || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">Expectativa económica</label><input type="text" name="expectativa_economica" class="interview-input" value="${existingData.expectativa_economica || ''}"></div>
+                            <div class="interview-field"><label class="interview-label">¿Deseas otro proceso?</label><input type="text" name="otro_proceso_reclutamiento" class="interview-input" value="${existingData.otro_proceso_reclutamiento || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">¿Por qué cree que es apta para el empleo?</label><textarea name="porque_apta" class="interview-input" rows="2">${existingData.porque_apta || ''}</textarea></div>
+                        </div>
+
+                        <div style="margin-top:2rem; background: #fafafa; padding: 1.5rem; border-radius: var(--r-md); border: 2px dashed #9333ea;">
+                            <div style="font-weight:800; color: #9333ea; margin-bottom: 1rem;">📝 Observaciones del entrevistador</div>
+                            <div class="interview-grid">
+                                <div class="interview-field"><label class="interview-label">Llegó a horario</label><select name="obs_llego_horario" class="interview-input"><option value="">--</option><option ${existingData.obs_llego_horario === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.obs_llego_horario === 'No' ? 'selected' : ''}>No</option></select></div>
+                                <div class="interview-field"><label class="interview-label">Al llegar, ¿la candidata saludo?</label><select name="obs_saludo_al_llegar" class="interview-input"><option value="">--</option><option ${existingData.obs_saludo_al_llegar === 'Sí' ? 'selected' : ''}>Sí</option><option ${existingData.obs_saludo_al_llegar === 'No' ? 'selected' : ''}>No</option></select></div>
+                                <div class="interview-field"><label class="interview-label">Presentación</label><select name="obs_presentacion" class="interview-input"><option value="">--</option><option ${existingData.obs_presentacion === 'Aseada' ? 'selected' : ''}>Aseada</option><option ${existingData.obs_presentacion === 'Desarreglada' ? 'selected' : ''}>Desarreglada</option><option ${existingData.obs_presentacion === 'Muy arreglada' ? 'selected' : ''}>Muy arreglada</option><option ${existingData.obs_presentacion === 'Casual' ? 'selected' : ''}>Casual</option><option ${existingData.obs_presentacion === 'Deportiva' ? 'selected' : ''}>Deportiva</option></select></div>
+                                <div class="interview-field"><label class="interview-label">Se mostró sonriente</label><select name="obs_sonriente" class="interview-input"><option value="">--</option><option ${existingData.obs_sonriente === 'Sí' ? 'selected' : ''}>😊</option><option ${existingData.obs_sonriente === 'Normal' ? 'selected' : ''}>😐</option><option ${existingData.obs_sonriente === 'No' ? 'selected' : ''}>☹️</option></select></div>
+                                <div class="interview-field"><label class="interview-label">Claridad y coherencia (1-5)</label><input type="number" min="1" max="5" name="obs_claridad_coherencia" class="interview-input" value="${existingData.obs_claridad_coherencia || ''}"></div>
+                                <div class="interview-field"><label class="interview-label">Fluidez verbal (1-5)</label><input type="number" min="1" max="5" name="obs_fluidez_verbal" class="interview-input" value="${existingData.obs_fluidez_verbal || ''}"></div>
+                                <div class="interview-field"><label class="interview-label">Habilidad de escucha (1-5)</label><input type="number" min="1" max="5" name="obs_habilidad_escucha" class="interview-input" value="${existingData.obs_habilidad_escucha || ''}"></div>
+                                <div class="interview-field"><label class="interview-label">Lenguaje no verbal (1-5)</label><input type="number" min="1" max="5" name="obs_lenguaje_no_verbal" class="interview-input" value="${existingData.obs_lenguaje_no_verbal || ''}"></div>
+                                <div class="interview-field">
+                                    <label class="interview-label" style="color:#d946ef;">¿CANDIDATA VIABLE?</label>
+                                    <select name="viable_si_no" class="interview-input" style="font-weight:800;border-color:#d946ef;"><option value="">-- Decisión --</option><option ${existingData.viable_si_no === 'SÍ' ? 'selected' : ''}>SÍ</option><option ${existingData.viable_si_no === 'NO' ? 'selected' : ''}>NO</option></select>
+                                </div>
+                                <div class="interview-field full"><label class="interview-label">Notas Adicionales</label><textarea name="notas_adicionales" class="interview-input" rows="3" placeholder="Puntos clave de la entrevista...">${existingData.notas_adicionales || ''}</textarea></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            `;
+
+            // Adjuntar eventos a los botones del modal
+            const closeBtn = document.getElementById('close-interview-btn');
+            const saveBtn = document.getElementById('save-interview-btn');
+            const addExpBtn = document.getElementById('add-experience-btn');
+
+            if (closeBtn) closeBtn.onclick = closeInterviewForm;
+            if (saveBtn) saveBtn.onclick = saveInterviewForm;
+
+            // Renderizar experiencias iniciales
+            const expContainer = document.getElementById('experience-blocks-container');
+            let expCount = 0;
+
+            // Función helper para generar el HTML de un bloque de experiencia
+            const getExpHtml = (i, data = {}) => `
+                <div class="experience-block" id="exp-block-${i}" style="background:#f8fafc;padding:1rem;border-radius:var(--r-md);margin-bottom:1.5rem;border:1px solid #e2e8f0; animation: slideUp 0.3s ease;">
+                    <div style="font-weight:800;font-size:0.8rem;color:#64748b;margin-bottom:0.8rem;text-transform:uppercase;">Experiencia #${i}</div>
+                    <div class="interview-grid">
+                        <div class="interview-field full"><label class="interview-label">Lugar de trabajo</label><input type="text" name="exp${i}_lugar" class="interview-input" value="${data.lugar || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">Puesto</label><input type="text" name="exp${i}_puesto" class="interview-input" value="${data.puesto || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">¿Cómo llegó ahí?</label><input type="text" name="exp${i}_como_llego" class="interview-input" value="${data.como_llego || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">Tiempo / Fechas</label><input type="text" name="exp${i}_tiempo_fechas" class="interview-input" value="${data.tiempo_fechas || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">Días y Horario</label><input type="text" name="exp${i}_dias_horario" class="interview-input" value="${data.dias_horario || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">Sueldo</label><input type="text" name="exp${i}_sueldo" class="interview-input" value="${data.sueldo || ''}"></div>
+                        <div class="interview-field full"><label class="interview-label">Funciones y responsabilidades</label><textarea name="exp${i}_funciones" class="interview-input" rows="2">${data.funciones || ''}</textarea></div>
+                        <div class="interview-field"><label class="interview-label">¿Con qué edades trabajaba?</label><input type="text" name="exp${i}_edades" class="interview-input" value="${data.edades || ''}"></div>
+                        <div class="interview-field"><label class="interview-label">¿Por qué salió?</label><input type="text" name="exp${i}_motivo_salida" class="interview-input" value="${data.motivo_salida || ''}"></div>
+                    </div>
+                </div>
+            `;
+
+            // Detectar cuántas experiencias ya existen
+            const existingExpIndices = Object.keys(existingData)
+                .filter(k => k.startsWith('exp') && k.endsWith('_lugar'))
+                .map(k => parseInt(k.replace('exp', '').replace('_lugar', '')))
+                .sort((a, b) => a - b);
+
+            const maxExistingIdx = existingExpIndices.length ? Math.max(...existingExpIndices) : 0;
+            const finalInitialCount = Math.max(3, maxExistingIdx);
+
+            for (let i = 1; i <= finalInitialCount; i++) {
+                const data = {
+                    lugar: existingData[`exp${i}_lugar`],
+                    puesto: existingData[`exp${i}_puesto`],
+                    como_llego: existingData[`exp${i}_como_llego`],
+                    tiempo_fechas: existingData[`exp${i}_tiempo_fechas`],
+                    dias_horario: existingData[`exp${i}_dias_horario`],
+                    sueldo: existingData[`exp${i}_sueldo`],
+                    funciones: existingData[`exp${i}_funciones`],
+                    edades: existingData[`exp${i}_edades`],
+                    motivo_salida: existingData[`exp${i}_motivo_salida`]
+                };
+                expContainer.insertAdjacentHTML('beforeend', getExpHtml(i, data));
+                expCount = i;
+            }
+
+            if (addExpBtn) {
+                addExpBtn.onclick = () => {
+                    expCount++;
+                    expContainer.insertAdjacentHTML('beforeend', getExpHtml(expCount));
+                    // Scroll suave al nuevo bloque
+                    const newBlock = document.getElementById(`exp-block-${expCount}`);
+                    if (newBlock) newBlock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    saveInterviewDraft(email); // Guardar borrador al agregar bloque
+                };
+            }
+
+            // --- Lógica de borrador temporal ---
+            const form = document.getElementById('interview-form-data');
+            form.oninput = () => saveInterviewDraft(email);
+
+            const draft = localStorage.getItem(`interview_draft_${email}`);
+            if (draft) {
+                const draftData = JSON.parse(draft);
+                const banner = document.createElement('div');
+                banner.id = 'draft-banner';
+                banner.style = "background: #fef9c3; border: 1px solid #fde047; padding: 0.8rem; border-radius: var(--r-md); margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; border-left: 4px solid #eab308; animation: slideUp 0.3s ease;";
+                banner.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:0.6rem">
+                        <span style="font-size:1.2rem">💡</span>
+                        <span>Se encontró un borrador sin guardar de esta entrevista.</span>
+                    </div>
+                    <div style="display:flex; gap:0.5rem">
+                        <button type="button" class="btn btn-sm btn-primary" id="restore-draft-btn" style="background:#eab308; border-color:#eab308">Restaurar</button>
+                        <button type="button" class="btn btn-sm btn-outline" id="discard-draft-btn">Descartar</button>
+                    </div>
+                `;
+                body.prepend(banner);
+
+                document.getElementById('restore-draft-btn').onclick = () => {
+                    // 1. Detectar cuántas experiencias hay en el borrador
+                    const draftExpIndices = Object.keys(draftData)
+                        .filter(k => k.startsWith('exp') && k.endsWith('_lugar'))
+                        .map(k => parseInt(k.replace('exp', '').replace('_lugar', '')))
+                        .sort((a, b) => a - b);
+                    const maxDraftIdx = draftExpIndices.length ? Math.max(...draftExpIndices) : 0;
+
+                    // 2. Si hay más experiencias en el borrador que las actuales, agregar bloques faltantes
+                    if (maxDraftIdx > expCount) {
+                        for (let i = expCount + 1; i <= maxDraftIdx; i++) {
+                            expContainer.insertAdjacentHTML('beforeend', getExpHtml(i));
+                        }
+                        expCount = maxDraftIdx;
+                    }
+
+                    // 3. Poblar todos los campos
+                    Object.keys(draftData).forEach(key => {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input) {
+                            if (input.type === 'radio') {
+                                if (input.value === draftData[key]) input.checked = true;
+                            } else {
+                                input.value = draftData[key];
+                            }
+                        }
+                    });
+                    banner.remove();
+                    showToast('Borrador restaurado');
+                };
+
+                document.getElementById('discard-draft-btn').onclick = () => {
+                    clearInterviewDraft(email);
+                    banner.remove();
+                };
+            }
+        }
+
+        function saveInterviewDraft(email) {
+            const form = document.getElementById('interview-form-data');
+            if (!form) return;
+            const formData = {};
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+                if (el.name) {
+                    if (el.type === 'radio') {
+                        if (el.checked) formData[el.name] = el.value;
+                    } else {
+                        formData[el.name] = el.value;
+                    }
+                }
+            }
+            localStorage.setItem(`interview_draft_${email}`, JSON.stringify(formData));
+        }
+
+        function clearInterviewDraft(email) {
+            localStorage.removeItem(`interview_draft_${email}`);
+        }
+
+        async function saveInterviewForm() {
+            const btn = document.getElementById('save-interview-btn');
+            const form = document.getElementById('interview-form-data');
+            const email = form.querySelector('[name="email"]').value;
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></span> Guardando...';
+
+            const formData = {};
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                const el = elements[i];
+                if (el.name) {
+                    if (el.type === 'radio') {
+                        if (el.checked) formData[el.name] = el.value;
+                    } else {
+                        formData[el.name] = el.value;
+                    }
+                }
+            }
+
+            try {
+                const res = await apiPost({
+                    action: 'saveEntrevista',
+                    email: email,
+                    formData: formData,
+                    reclutadoraEmail: SESSION.email
+                });
+
+                if (res.success) {
+                    showToast('Entrevista guardada con éxito');
+                    clearInterviewDraft(email);
+                    closeInterviewForm();
+                } else {
+                    alert(res.message);
+                }
+            } catch (e) {
+                alert('Error al guardar entrevista.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 Guardar Entrevista';
+            }
+        }
+
+        function closeInterviewForm() {
+            document.getElementById('modal-interview-container').classList.add('hidden');
+        }
+
         function openModal(c) {
             currentCandidataRow = c;
             const estado = c.estado || 'pendiente';
@@ -1268,6 +1748,7 @@
                 html += di('¿Qué estudia?', c.estudiando_que);
                 html += di('Semestre', c.estudiando_semestre);
                 html += diFull('Horario de clases', c.estudiando_horarios);
+                html += diFull('¿Por qué elegiste esa carrera?', c.por_que_eligio_carrera);
                 html += di('¿En prácticas?', c.en_practicas);
                 if (c.en_practicas === 'Sí') {
                     html += di('Prácticas con peques', c.practicas_pequenitos);
@@ -1746,7 +2227,10 @@
                     if (btn.dataset.filter) {
                         currentFilter = btn.dataset.filter;
                         const cfg = CONFIG.ESTADO_CONFIG[currentFilter];
-                        document.getElementById('section-title').textContent = cfg ? cfg.label : 'Todas las candidatas';
+                        let title = 'Todas las candidatas';
+                        if (cfg) title = cfg.label;
+                        else if (currentFilter === 'entrevista') title = 'Candidatas con Entrevista agendada';
+                        document.getElementById('section-title').textContent = title;
                     }
                     renderCandidatas();
                 }
@@ -1979,6 +2463,34 @@
         // ─── Arranque ─────────────────────────────────
         init();
     </script>
+    <!-- ══════════════════════════════════════════
+     MODAL DE ENTREVISTA (NUEVO)
+══════════════════════════════════════════ -->
+    <div id="modal-interview-container" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-card modal-interview" style="display: flex; flex-direction: column; max-height: 95vh;">
+            <div class="modal-header">
+                <div>
+                    <h2 id="interview-candidate-name" style="margin:0; font-size: 1.25rem;">—</h2>
+                    <span
+                        style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Formato
+                        de Entrevista</span>
+                </div>
+                <button class="btn-close" id="close-interview-btn">✕</button>
+            </div>
+
+            <div class="modal-body" id="interview-form-body" style="overflow-y: auto; flex: 1; background: #fdfafd;">
+                <!-- El contenido se genera dinámicamente -->
+            </div>
+
+            <div class="modal-footer" style="padding: 1.2rem 2rem; justify-content: flex-end; background: #fff;">
+                <button class="btn btn-outline" onclick="closeInterviewForm()">Cancelar</button>
+                <button class="btn btn-primary" id="save-interview-btn"
+                    style="background: #9333ea; border-color: #9333ea; padding: 0.8rem 2rem;">
+                    💾 Guardar Entrevista
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
