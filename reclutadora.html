@@ -1115,6 +1115,17 @@
                 return null;
             }
         }
+        // Helper para normalizar el estado desde Sheets (ignora mayúsculas y variaciones manuales)
+        function normalizeEstado(rawEstado) {
+            if (!rawEstado) return 'pendiente';
+            const e = rawEstado.toString().toLowerCase().trim();
+            if (e.startsWith('aceptad') || e === 'en proceso') return 'aceptado';
+            if (e.startsWith('rechazad')) return 'rechazado';
+            if (e.startsWith('capacitad')) return 'capacitada';
+            if (e.startsWith('whatsapp')) return 'whatsapp';
+            return e;
+        }
+
         let currentFilter = 'todos';
         let currentCiudad = 'todas';
         let currentSearch = '';
@@ -1308,7 +1319,7 @@
 
             filteredList.forEach(c => {
                 counts.todos++;
-                const e = c.estado || 'pendiente';
+                const e = normalizeEstado(c.estado);
                 // Corregimos inconsistencia de nombres: 'aceptado' vs 'aceptadas' (solo para visualización)
                 if (counts[e] !== undefined) counts[e]++;
 
@@ -1333,9 +1344,9 @@
 
             // Filtro por estado
             if (currentFilter === 'entrevista') {
-                list = list.filter(c => (c.estado || 'pendiente') === 'aceptado' && c.agendo_entrevista && c.agendo_entrevista !== '-');
+                list = list.filter(c => (normalizeEstado(c.estado) === 'aceptado' && c.agendo_entrevista && c.agendo_entrevista !== '-'));
             } else if (currentFilter !== 'todos') {
-                list = list.filter(c => (c.estado || 'pendiente') === currentFilter);
+                list = list.filter(c => normalizeEstado(c.estado) === currentFilter);
             }
 
             // Filtro por ciudad
@@ -1384,7 +1395,7 @@
 
 
         function candidataCardHtml(c) {
-            const estado = c.estado || 'pendiente';
+            const estado = normalizeEstado(c.estado);
             const cfg = CONFIG.ESTADO_CONFIG[estado] || CONFIG.ESTADO_CONFIG['pendiente'];
             const telefono = c.telefono_principal || c.telefono || '—';
 
@@ -1817,7 +1828,7 @@
 
         function openModal(c) {
             currentCandidataRow = c;
-            const estado = c.estado || 'pendiente';
+            const estado = normalizeEstado(c.estado);
             const cfg = CONFIG.ESTADO_CONFIG[estado] || CONFIG.ESTADO_CONFIG['pendiente'];
             const telefono = c.telefono_principal || c.telefono || '—';
 
@@ -2548,7 +2559,7 @@
                                     <td>
                                         <input type="text" class="sel-agendo fp-agendo" 
                                             placeholder="dd/mm --:--" 
-                                            value="${g.agendo_entrevista || ''}" 
+                                            value="${g.agendo_entrevista && g.agendo_entrevista !== '-' ? g.agendo_entrevista : ''}" 
                                             data-email="${g.email}">
                                     </td>
                                     <td style="text-align:center">
