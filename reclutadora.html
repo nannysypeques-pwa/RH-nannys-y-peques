@@ -165,6 +165,48 @@
             color: var(--red-mid);
         }
 
+        /* Botón Check WhatsApp */
+        .btn-wa-check {
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            filter: grayscale(1);
+            opacity: 0.4;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 4px;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+        }
+
+        .btn-wa-check:hover {
+            opacity: 0.8;
+            transform: scale(1.2);
+        }
+
+        .btn-wa-check.active {
+            filter: grayscale(0);
+            opacity: 1;
+        }
+
+        .btn-wa-check.loading {
+            animation: pulse-wa 1s infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-wa {
+            from {
+                opacity: 0.4;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0.8;
+                transform: scale(1.1);
+            }
+        }
+
         /* ─── Tracking Table ─── */
         .track-card {
             background: #fff;
@@ -248,6 +290,96 @@
         .flatpickr-day.endRange,
         .flatpickr-day.selected:focus,
         .flatpickr-day.startRange:focus,
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover,
+        .flatpickr-day.selected.prevMonthDay,
+        .flatpickr-day.selected.nextMonthDay,
+        .flatpickr-day.startRange.prevMonthDay,
+        .flatpickr-day.startRange.nextMonthDay,
+        .flatpickr-day.endRange.prevMonthDay,
+        .flatpickr-day.endRange.nextMonthDay {
+            background: var(--pink-400);
+            border-color: var(--pink-400);
+        }
+
+        /* ─── Phone Tooltip ─── */
+        .phone-tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .phone-tooltip {
+            visibility: hidden;
+            width: 160px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 6px 8px;
+            position: absolute;
+            z-index: 2000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -80px;
+            opacity: 0;
+            transition: opacity 0.2s ease, visibility 0s 0.2s;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+        }
+
+        /* Bridge to prevent tooltip from closing when moving cursor */
+        .phone-tooltip::before {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 30px;
+            background: transparent;
+        }
+
+        .phone-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .phone-tooltip-wrapper:hover .phone-tooltip {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transition: opacity 0.2s ease, visibility 0s;
+        }
+
+        .btn-copy-mini {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-copy-mini:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
         .flatpickr-day.endRange:focus,
         .flatpickr-day.selected:hover,
         .flatpickr-day.startRange:hover,
@@ -898,7 +1030,12 @@
                 <section id="sec-seguimiento" class="hidden">
                     <div class="section-bar" style="margin-bottom:0.5rem">
                         <h2>📅 Seguimiento de Candidatas</h2>
-                        <div style="display:flex;gap:1rem">
+                        <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input class="form-control" type="text" id="search-input-seguimiento"
+                                    placeholder="Buscar en seguimiento...">
+                            </div>
                             <button class="btn btn-outline" onclick="loadSeguimientoData()">🔄 Refrescar</button>
                             <button class="btn btn-outline" style="border-color:var(--red-mid);color:var(--red-mid)"
                                 onclick="confirmClearSeguimiento()">🗑️ Limpiar</button>
@@ -1175,8 +1312,8 @@
                 // Corregimos inconsistencia de nombres: 'aceptado' vs 'aceptadas' (solo para visualización)
                 if (counts[e] !== undefined) counts[e]++;
 
-                // Conteo virtual de entrevistas agendadas (excluyendo rechazadas)
-                if (c.agendo_entrevista && c.agendo_entrevista !== '-' && e !== 'rechazado') {
+                // Conteo virtual de entrevistas agendadas (estrictamente en estado 'aceptado')
+                if (c.agendo_entrevista && c.agendo_entrevista !== '-' && e === 'aceptado') {
                     counts.entrevista++;
                 }
             });
@@ -1196,7 +1333,7 @@
 
             // Filtro por estado
             if (currentFilter === 'entrevista') {
-                list = list.filter(c => c.agendo_entrevista && c.agendo_entrevista !== '-' && c.estado !== 'rechazado');
+                list = list.filter(c => (c.estado || 'pendiente') === 'aceptado' && c.agendo_entrevista && c.agendo_entrevista !== '-');
             } else if (currentFilter !== 'todos') {
                 list = list.filter(c => (c.estado || 'pendiente') === currentFilter);
             }
@@ -1211,6 +1348,8 @@
                 const q = currentSearch.toLowerCase();
                 list = list.filter(c =>
                     (c.nombre || '').toLowerCase().includes(q) ||
+                    (c.telefono_principal || '').includes(q) ||
+                    (c.telefono_alternativo || '').includes(q) ||
                     (c.telefono || '').includes(q) ||
                     (c.email || '').toLowerCase().includes(q)
                 );
@@ -1277,7 +1416,16 @@
         <div class="card-meta">
           <span>${c.edad ? c.edad + ' años' : ''}</span>
           ${c.edad ? '<span class="card-dot">·</span>' : ''}
-          <span>📞 ${telefono}</span>
+          <span style="display:flex;align-items:center;gap:0.3rem;flex:1;">
+            <span style="white-space:nowrap">📞 ${telefono}</span>
+            ${estado === 'whatsapp' ? `
+              <button class="btn-wa-check ${c.whatsapp_agregada === 'Sí' ? 'active' : ''}" 
+                      style="margin-left:auto"
+                      title="${c.whatsapp_agregada === 'Sí' ? 'Agregada al grupo' : 'Marcar como agregada'}"
+                      onclick="event.stopPropagation(); toggleWAStatus(this, '${c.ciudad}', ${c.rowIndex})">
+                ✅
+              </button>` : ''}
+          </span>
         </div>
       </div>
       <span class="badge ${cfg.cls}">${cfg.emoji} ${cfg.label}</span>
@@ -1737,6 +1885,10 @@
             html += di('Email', c.email);
             html += di('Teléfono principal', c.telefono_principal);
             html += di('Teléfono alternativo', c.telefono_alternativo);
+            html += di('¿Es mamá?', c.eres_mama);
+            if (c.eres_mama === 'Sí' && c.hijos_detalle) {
+                html += diFull('Hijos y edades', c.hijos_detalle);
+            }
             html += `</div></div>`;
             // ═══ 2. FORMACIÓN ═══
             html += `<div class="detail-section">${secTitle('🎓', 'Formación Académica')}<div class="detail-grid">`;
@@ -2210,6 +2362,18 @@
             });
         });
 
+        // Buscador tiempo real (Listado)
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            currentSearch = e.target.value.toLowerCase();
+            renderCandidatas();
+        });
+
+        // Buscador tiempo real (Seguimiento)
+        document.getElementById('search-input-seguimiento').addEventListener('input', (e) => {
+            currentSearch = e.target.value.toLowerCase();
+            renderSeguimiento();
+        });
+
         // Navegación entre vistas
         document.querySelectorAll('.sb-btn[data-view]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -2217,6 +2381,11 @@
                 btn.classList.add('active');
 
                 const view = btn.dataset.view;
+                // Limpiar búsqueda al cambiar de vista principal
+                currentSearch = '';
+                document.getElementById('search-input').value = '';
+                document.getElementById('search-input-seguimiento').value = '';
+
                 if (view === 'seguimiento') {
                     document.getElementById('sec-listado').classList.add('hidden');
                     document.getElementById('sec-seguimiento').classList.remove('hidden');
@@ -2296,14 +2465,26 @@
             const range = getWeekRange(CURRENT_SEGUIMIENTO_WEEK);
             grid.innerHTML = '';
 
+            // Filtrar data global por búsqueda antes de iterar sesiones
+            let filteredFullData = [...SEGUIMIENTO_DATA];
+            if (currentSearch.trim()) {
+                const q = currentSearch.toLowerCase();
+                filteredFullData = filteredFullData.filter(d =>
+                    (d.nombre || '').toLowerCase().includes(q) ||
+                    (d.telefono || '').includes(q)
+                );
+            }
+
+            // Variable para rastrear si alguna sesión tiene resultados
+            let totalFound = 0;
+
             SESIONES.forEach(s => {
-                // Filtrar candidatas para esta sesión y la semana seleccionada
-                const sessionGirls = SEGUIMIENTO_DATA.filter(d => {
+                // Filtrar candidatas para esta sesión y la semana seleccionada (y la búsqueda ya aplicada arriba)
+                const sessionGirls = filteredFullData.filter(d => {
                     if (d.dia_sesion !== s.dia || d.hora_sesion !== s.hora) return false;
 
                     const fSesion = parseSheetDate(d.fecha_sesion);
                     if (!fSesion) {
-                        // Fallback por si hay datos viejos sin fecha_sesion, usamos el campo 'semana'
                         return (d.semana || 'actual') === CURRENT_SEGUIMIENTO_WEEK;
                     }
 
@@ -2315,6 +2496,8 @@
                         return fSesion >= range.start && fSesion <= range.end;
                     }
                 });
+
+                if (sessionGirls.length > 0) totalFound += sessionGirls.length;
 
                 const card = document.createElement('div');
                 card.className = 'track-card';
@@ -2349,8 +2532,14 @@
                             html += `
                                 <tr class="${asistioCls}">
                                     <td style="font-weight:700">
-                                        <div style="cursor:pointer" onclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')">
-                                            ${g.nombre}
+                                        <div class="phone-tooltip-wrapper">
+                                            <div style="cursor:pointer" onclick="toggleAsistencia('${g.email}', '${g.asistencia_platica === 'Sí' ? 'No' : 'Sí'}')">
+                                                ${g.nombre}
+                                            </div>
+                                            <div class="phone-tooltip">
+                                                <span>📞 ${g.telefono || '—'}</span>
+                                                <button class="btn-copy-mini" onclick="event.stopPropagation(); copyToClipboard('${g.telefono || ''}')" title="Copiar número">📋</button>
+                                            </div>
                                         </div>
                                     </td>
                                     <td style="font-size:0.7rem;color:var(--text-muted)">
@@ -2375,6 +2564,16 @@
                 card.innerHTML = html;
                 grid.appendChild(card);
             });
+
+            // Si no se encontró nada en TODAS las sesiones y hay búsqueda activa
+            if (totalFound === 0 && currentSearch.trim()) {
+                grid.innerHTML = `
+                <div class="empty-state" style="grid-column:1/-1; padding:3rem">
+                    <div class="empty-state-emoji">🔍</div>
+                    <p style="font-weight:700;color:var(--text-h)">Sin resultados</p>
+                    <p style="font-size:0.85rem">No hay candidatas en seguimiento que coincidan con "${currentSearch}".</p>
+                </div>`;
+            }
 
             // Inicializar Flatpickr después de renderizar el grid
             flatpickr(".fp-agendo", {
@@ -2414,6 +2613,52 @@
                 }
             } catch (err) {
                 showToast('Error de conexión', 'error');
+            }
+        }
+
+        async function toggleWAStatus(btn, ciudad, rowIndex) {
+            if (btn.classList.contains('loading')) return;
+
+            const isCurrentlyActive = btn.classList.contains('active');
+            const newValue = !isCurrentlyActive;
+
+            btn.classList.add('loading');
+
+            try {
+                const result = await apiPost({
+                    action: 'toggleWhatsAppGroup',
+                    ciudad,
+                    rowIndex,
+                    value: newValue
+                });
+
+                if (result.success) {
+                    btn.classList.toggle('active', newValue);
+                    btn.title = newValue ? 'Agregada al grupo' : 'Marcar como agregada';
+
+                    // Actualizar en memoria local
+                    const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == rowIndex && x.ciudad === ciudad);
+                    if (idx >= 0) {
+                        TODAS_CANDIDATAS[idx].whatsapp_agregada = newValue ? 'Sí' : 'No';
+                    }
+                    showToast(newValue ? 'Marcada como agregada' : 'Marcada como pendiente');
+                } else {
+                    showToast(result.message || 'Error al actualizar', 'error');
+                }
+            } catch (err) {
+                showToast('Error de conexión', 'error');
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+
+        async function copyToClipboard(text) {
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Número copiado');
+            } catch (err) {
+                console.error("Error copy", err);
             }
         }
 

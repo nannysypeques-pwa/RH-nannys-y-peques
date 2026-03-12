@@ -27,6 +27,16 @@ const radioLabel = name => {
 };
 const checks = (name) => [...document.querySelectorAll(`[name="${name}"]:checked`)].map(e => e.value).join(', ');
 
+// Helper para verificar que un texto tenga al menos una palabra (mínimo 2 caracteres alfanuméricos)
+const hasWord = str => {
+    if (!str) return false;
+    // Eliminar espacios y verificar que quede algo con sentido (letras o números)
+    const lean = str.trim();
+    if (lean.length < 2) return false;
+    // Regex para verificar que contenga al menos un carácter alfanumérico
+    return /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/.test(lean);
+};
+
 // ─── Generar sub-sección genérica de experiencia ─────────────
 function buildGenericSub(exp) {
     const d = document.createElement('div');
@@ -104,13 +114,14 @@ function buildFamiliaBlock(n) {
         <label class="form-label">¿Tienes el teléfono de mamá o papá? <span class="req">*</span></label>
         <div class="radio-group">
           <div class="radio-pill"><input type="radio" name="f${n}_tiene_tel" id="f${n}_tel_no" value="No"><label for="f${n}_tel_no">❌ No</label></div>
+          <div class="radio-pill"><input type="radio" name="f${n}_tiene_tel" id="f${n}_tel_later" value="No ahora pero puedo conseguirlo"><label for="f${n}_tel_later">⏳ No ahora pero puedo conseguirlo</label></div>
           <div class="radio-pill"><input type="radio" name="f${n}_tiene_tel" id="f${n}_tel_si" value="Sí"><label for="f${n}_tel_si">✅ Sí</label></div>
         </div>
       </div>
     </div>
     <div class="sub-block green cond" id="f${n}_tel_block">
       <div class="form-group mb-1">
-        <label class="form-label" for="f${n}_telefono">Teléfono de mamá o papá <span class="req">*</span></label>
+        <label class="form-label" for="f${n}_telefono">Teléfono de mamá o papá</label>
         <input class="form-control" type="tel" id="f${n}_telefono" placeholder="10 dígitos">
       </div>
     </div>
@@ -158,8 +169,10 @@ function updateProgress() {
     if (val('tiempo_trabajo')) done++;
     // Sentinel 7: email
     if (val('email') && val('email').includes('@')) done++;
+    // Sentinel 8: maternidad
+    if (radio('eres_mama')) done++;
 
-    const pct = Math.round((done / 7) * 100);
+    const pct = Math.round((done / 8) * 100);
     document.getElementById('progress-bar').style.width = pct + '%';
     document.getElementById('progress-pct').textContent = pct + '%';
 }
@@ -234,6 +247,15 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         show('zona-libre-section');
     }
+
+    // ── Maternidad ──
+    document.querySelectorAll('[name="eres_mama"]').forEach(el => {
+        el.addEventListener('change', () => {
+            if (el.value === 'Sí') show('sub-mama-hijos');
+            else hide('sub-mama-hijos');
+            updateProgress();
+        });
+    });
 
     // Generar sub-secciones genéricas de experiencia
     GENERIC_EXPS.forEach(buildGenericSub);
@@ -436,7 +458,7 @@ function collectFormData() {
         const bloques = [];
         for (let i = 1; i <= n; i++) {
             const tieneTel = radio(`f${i}_tiene_tel`);
-            bloques.push(`FAMILIA ${i}: Período: ${val(`f${i}_anio`)} | Días/horarios: ${val(`f${i}_horarios`)} | Edades: ${val(`f${i}_edades`)} | Tel: ${tieneTel === 'Sí' ? val(`f${i}_telefono`) : 'No'} | Resp: ${val(`f${i}_resp`)}`);
+            bloques.push(`FAMILIA ${i}: Período: ${val(`f${i}_anio`)} | Días/horarios: ${val(`f${i}_horarios`)} | Edades: ${val(`f${i}_edades`)} | Tel: ${tieneTel === 'Sí' ? val(`f${i}_telefono`) : tieneTel} | Resp: ${val(`f${i}_resp`)}`);
         }
         familiasDetalle = bloques.join('\n');
     }
@@ -476,6 +498,8 @@ function collectFormData() {
         edad: val('edad'),
         telefono_principal: val('tel_principal'),
         telefono_alternativo: val('tel_alternativo'),
+        eres_mama: radio('eres_mama'),
+        hijos_detalle: val('hijos_detalle'),
         grado_estudios: grado,
         grado_detalle: gradoDetalle,
         grado_periodo: gradoPeriodo,
@@ -521,9 +545,11 @@ async function handleSubmit(e) {
     const nombre = val('nombre');
     const email = val('email');
     const tel = val('tel_principal');
-    if (!nombre) { showAlert('alert-container', 'Por favor ingresa tu nombre completo.'); scrollToTop(); return; }
+    if (!hasWord(nombre)) { showAlert('alert-container', 'Por favor ingresa tu nombre completo (no puede estar vacío).'); scrollToTop(); return; }
     if (!email || !email.includes('@')) { showAlert('alert-container', 'Ingresa un correo electrónico válido.'); scrollToTop(); return; }
     if (!tel || tel.replace(/\D/g, '').length < 10) { showAlert('alert-container', 'Ingresa un teléfono válido de 10 dígitos.'); scrollToTop(); return; }
+    if (!radio('eres_mama')) { showAlert('alert-container', 'Por favor selecciona si eres mamá.'); scrollToTop(); return; }
+    if (radio('eres_mama') === 'Sí' && !hasWord(val('hijos_detalle'))) { showAlert('alert-container', 'Por favor indica cuántos hijos tienes y sus edades.'); scrollToTop(); return; }
     if (!radio('grado_estudios')) { showAlert('alert-container', 'Selecciona tu grado de estudios.'); scrollToTop(); return; }
 
     // Validar zona
@@ -536,7 +562,7 @@ async function handleSubmit(e) {
     } else if (ciudad === 'CDMX') {
         if (!radio('zona_ciudad_cdmx')) { showAlert('alert-container', 'Selecciona tu zona de ubicación.'); scrollToTop(); return; }
     } else {
-        if (!val('zona_libre')) { showAlert('alert-container', 'Ingresa tu zona o colonia de ubicación.'); scrollToTop(); return; }
+        if (!hasWord(val('zona_libre'))) { showAlert('alert-container', 'Ingresa tu zona o colonia de ubicación.'); scrollToTop(); return; }
     }
 
     if (!radio('disponibilidad')) { showAlert('alert-container', 'Selecciona tu disponibilidad.'); scrollToTop(); return; }
@@ -551,7 +577,7 @@ async function handleSubmit(e) {
             scrollToTop(); return;
         }
         for (let i = 1; i <= Math.min(numFam, 5); i++) {
-            if (!val(`f${i}_anio`) || !val(`f${i}_horarios`) || !val(`f${i}_edades`) || !val(`f${i}_resp`)) {
+            if (!hasWord(val(`f${i}_anio`)) || !hasWord(val(`f${i}_horarios`)) || !hasWord(val(`f${i}_edades`)) || !hasWord(val(`f${i}_resp`))) {
                 showAlert('alert-container', `Por favor completa toda la información obligatoria de la Familia ${i}.`);
                 document.getElementById(`familia-block-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
@@ -559,11 +585,6 @@ async function handleSubmit(e) {
             const tieneTel = radio(`f${i}_tiene_tel`);
             if (!tieneTel) {
                 showAlert('alert-container', `Indica si tienes el teléfono de mamá o papá de la Familia ${i}.`);
-                document.getElementById(`familia-block-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-            if (tieneTel === 'Sí' && !val(`f${i}_telefono`)) {
-                showAlert('alert-container', `Por favor ingresa el teléfono de la Familia ${i}.`);
                 document.getElementById(`familia-block-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
@@ -576,25 +597,25 @@ async function handleSubmit(e) {
         if (radio('guarderia_ref') === 'Sí' && !document.querySelector('[name="guarderia_ref_tipo"]:checked')) {
             showAlert('alert-container', 'Selecciona al menos un tipo de referencia de la guardería.'); scrollToTop(); return;
         }
-        if (!val('guarderia_anio')) { showAlert('alert-container', 'Indica el año y tiempo que estuviste en la guardería.'); scrollToTop(); return; }
+        if (!hasWord(val('guarderia_anio'))) { showAlert('alert-container', 'Indica el año y tiempo que estuviste en la guardería.'); scrollToTop(); return; }
         const rangos = document.querySelectorAll('[name="guarderia_rango"]:checked');
         if (rangos.length === 0) { showAlert('alert-container', 'Selecciona al menos un rango de edad en la guardería.'); scrollToTop(); return; }
 
         // Lactantes detalles
         if (document.getElementById('grango-l')?.checked) {
-            if (!val('g_l_edad') || !val('g_l_actividades') || !document.querySelector('[name="g_l_act"]:checked')) {
+            if (!hasWord(val('g_l_edad')) || !hasWord(val('g_l_actividades')) || !document.querySelector('[name="g_l_act"]:checked')) {
                 showAlert('alert-container', 'Completa los detalles de Lactantes en la guardería.'); scrollToTop(); return;
             }
         }
         // Maternal detalles
         if (document.getElementById('grango-m')?.checked) {
-            if (!val('g_m_edad') || !val('g_m_actividades') || !document.querySelector('[name="g_m_act"]:checked')) {
+            if (!hasWord(val('g_m_edad')) || !hasWord(val('g_m_actividades')) || !document.querySelector('[name="g_m_act"]:checked')) {
                 showAlert('alert-container', 'Completa los detalles de Maternal en la guardería.'); scrollToTop(); return;
             }
         }
         // Preescolar detalles
         if (document.getElementById('grango-p')?.checked) {
-            if (!val('g_p_edad') || !val('g_p_actividades') || !document.querySelector('[name="g_p_act"]:checked')) {
+            if (!hasWord(val('g_p_edad')) || !hasWord(val('g_p_actividades')) || !document.querySelector('[name="g_p_act"]:checked')) {
                 showAlert('alert-container', 'Completa los detalles de Preescolar en la guardería.'); scrollToTop(); return;
             }
         }
@@ -609,8 +630,8 @@ async function handleSubmit(e) {
             if (radio(`${exp.id}_ref`) === 'Sí' && !document.querySelector(`[name="${exp.id}_ref_tipo"]:checked`)) {
                 showAlert('alert-container', `Selecciona al menos un tipo de referencia para ${exp.label}.`); scrollToTop(); return;
             }
-            if (!val(`${exp.id}_rango`)) { showAlert('alert-container', `Ingresa el rango de edad para ${exp.label}.`); scrollToTop(); return; }
-            if (!val(`${exp.id}_actividades`)) { showAlert('alert-container', `Describe tus actividades en ${exp.label}.`); scrollToTop(); return; }
+            if (!hasWord(val(`${exp.id}_rango`))) { showAlert('alert-container', `Ingresa el rango de edad para ${exp.label}.`); scrollToTop(); return; }
+            if (!hasWord(val(`${exp.id}_actividades`))) { showAlert('alert-container', `Describe tus actividades en ${exp.label}.`); scrollToTop(); return; }
         }
     }
 
