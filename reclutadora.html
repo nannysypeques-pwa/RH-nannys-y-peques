@@ -1462,11 +1462,12 @@
       <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:${c.asistencia_entrevista === 'Sí' ? 'var(--green-mid)' : '#eab308'}"><span style="font-size:0.9rem">🤝</span> <span>Entrevista: ${c.agendo_entrevista}</span></span>
       ` : ''}
     </div>
-    <div class="card-footer" style="padding-top:0.6rem;border-top:1px solid rgba(0,0,0,0.04);display:flex;justify-content:${estado === 'aceptado' ? 'space-between' : 'flex-end'};align-items:center;">
+    <div class="card-footer" style="padding-top:0.6rem;border-top:1px solid rgba(0,0,0,0.04);display:flex;justify-content:${(estado === 'aceptado' || estado === 'capacitada') ? 'space-between' : 'flex-end'};align-items:center;">
       ${estado === 'aceptado' ? `<div><button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect(this, '${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button></div>` : ''}
+      ${estado === 'capacitada' ? `<div><button class="btn btn-sm" style="padding:0.2rem 0.6rem;font-size:0.75rem;background:#9333ea;border-color:#9333ea;color:#fff;" onclick="event.stopPropagation(); openInterviewForm('${c.email}', '${c.nombre}', '${telefono}')">📋 Ver Entrevista</button></div>` : ''}
       <span style="color:var(--pink-400);font-weight:700;font-size:0.82rem">Ver CV →</span>
     </div>
-    ${currentFilter === 'entrevista' ? `
+    ${(currentFilter === 'entrevista') ? `
     <div style="padding:0.6rem 1.2rem 1.2rem;">
         <button class="btn btn-primary w-full" style="background:#9333ea;border-color:#9333ea;font-size:0.85rem;padding:0.6rem" 
                 onclick="event.stopPropagation(); openInterviewForm('${c.email}', '${c.nombre}', '${telefono}')">
