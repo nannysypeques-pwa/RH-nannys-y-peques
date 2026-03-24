@@ -1414,10 +1414,33 @@
             const telefono = c.telefono_principal || c.telefono || '—';
 
             // Format the session date/time if available
-            const sessionText = c.dia_sesion ?
-                `${c.dia_sesion}${c.hora_sesion ? ' a las ' + c.hora_sesion : ''}` :
-                'Sin asignar plática';
-            const sessionColor = c.dia_sesion ? 'var(--blue-500)' : 'var(--text-muted)';
+            let sessionText = 'Sin asignar plática';
+            let sessionColor = 'var(--text-muted)';
+            const parsedSessionDate = parseSheetDate(c.fecha_sesion);
+
+            if (parsedSessionDate) {
+                const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                const dName = dayNames[parsedSessionDate.getDay()];
+                const d = String(parsedSessionDate.getDate()).padStart(2, '0');
+                const m = String(parsedSessionDate.getMonth() + 1).padStart(2, '0');
+
+                let timeStr = '';
+                if (parsedSessionDate.getHours() !== 0 || parsedSessionDate.getMinutes() !== 0) {
+                    let hours = parsedSessionDate.getHours();
+                    const minutes = String(parsedSessionDate.getMinutes()).padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    timeStr = ` a las ${hours}:${minutes} ${ampm}`;
+                } else if (c.hora_sesion) {
+                    timeStr = ` a las ${c.hora_sesion}`;
+                }
+
+                sessionText = `${dName} ${d}/${m}${timeStr}`;
+                sessionColor = 'var(--blue-500)';
+            } else if (c.dia_sesion) {
+                sessionText = `${c.dia_sesion}${c.hora_sesion ? ' a las ' + c.hora_sesion : ''}`;
+                sessionColor = 'var(--blue-500)';
+            }
 
             // Lógica de alerta por 6 meses en WhatsApp
             let alertClass = '';
@@ -2163,8 +2186,8 @@
                             c.fecha_sesion = fechaISO;
                             c.dia_sesion = dia;
                             c.hora_sesion = hora;
-                            
-                            renderCandidatas(); 
+
+                            renderCandidatas();
 
                             document.getElementById('modal-overlay').classList.add('hidden');
                         } else {
@@ -2442,7 +2465,7 @@
             const now = new Date();
             const day = now.getDay();
             const diffToMonday = (day === 0 ? -6 : 1) - day;
-            
+
             // Este lunes (inicio de semana actual)
             const baseMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
             baseMonday.setHours(0, 0, 0, 0);
@@ -2466,11 +2489,11 @@
                 SESIONES.forEach(s => {
                     const sessionDate = new Date(baseMonday);
                     sessionDate.setDate(baseMonday.getDate() + (weekIdx * 7) + diasMap[s.dia]);
-                    
+
                     // Solo mostrar si es hoy o futuro
                     const compareDate = new Date(sessionDate);
                     compareDate.setHours(23, 59, 59, 999);
-                    
+
                     if (compareDate >= now) {
                         const label = formatLabel(sessionDate, s.hora);
                         // Guardamos la fecha ISO como valor
@@ -2498,7 +2521,7 @@
                 monday.setDate(monday.getDate() + 7);
                 sunday.setDate(sunday.getDate() + 7); // Domingo de la próxima semana
             } else if (referencia === 'anterior') {
-                monday.setDate(monday.getDate() - 30); // Ver hasta un mes atrás
+                monday.setDate(monday.getDate() - 7); // Ver semana anterior
                 sunday.setDate(sunday.getDate() - 7);
             }
 
@@ -2547,11 +2570,11 @@
                 // Filtrar candidatas para esta sesión y la semana seleccionada (y la búsqueda ya aplicada arriba)
                 const sessionGirls = filteredFullData.filter(d => {
                     const fSesion = parseSheetDate(d.fecha_sesion);
-                    
+
                     if (fSesion) {
                         const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
                         const dName = dayNames[fSesion.getDay()];
-                        
+
                         // Si el día no coincide, descartamos de esta sesión
                         if (dName !== s.dia) return false;
 
@@ -2571,24 +2594,18 @@
                             // Si solo tiene fecha (00:00), usamos el label legacy 'hora_sesion' para desempatar la tarjeta
                             // Esto permite que registros viejos o manuales sin hora sigan apareciendo en su columna correcta.
                             if (d.hora_sesion && d.hora_sesion !== s.hora) return false;
-                            
+
                             // Si no hay hora_sesion label, y solo hay una sesión por día, lo dejamos pasar.
                         }
                     } else {
                         // Legacy: sin fecha_sesion, usamos etiquetas exactas
                         if (d.dia_sesion !== s.dia || d.hora_sesion !== s.hora) return false;
                         if ((d.semana || 'actual') !== CURRENT_SEGUIMIENTO_WEEK) return false;
-                        return true; 
+                        return true;
                     }
 
                     // Validar rango de semana para fSesion (esto controla en qué pestaña aparece)
-                    if (CURRENT_SEGUIMIENTO_WEEK === 'anterior') {
-                        return fSesion < range.end;
-                    } else if (CURRENT_SEGUIMIENTO_WEEK === 'proxima') {
-                        return fSesion >= range.start && fSesion <= range.end;
-                    } else {
-                        return fSesion >= range.start && fSesion <= range.end;
-                    }
+                    return fSesion >= range.start && fSesion <= range.end;
                 });
 
                 if (sessionGirls.length > 0) totalFound += sessionGirls.length;
