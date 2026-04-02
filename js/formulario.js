@@ -501,6 +501,8 @@ function collectFormData() {
         telefono_alternativo: val('tel_alternativo'),
         eres_mama: radio('eres_mama'),
         hijos_detalle: val('hijos_detalle'),
+        postulada_anteriormente: radio('postulada_anteriormente'),
+        trabajado_anteriormente: radio('trabajado_anteriormente'),
         grado_estudios: grado,
         grado_detalle: gradoDetalle,
         grado_periodo: gradoPeriodo,
@@ -551,24 +553,57 @@ async function handleSubmit(e) {
     if (!tel || tel.replace(/\D/g, '').length < 10) { showAlert('alert-container', 'Ingresa un teléfono válido de 10 dígitos.'); scrollToTop(); return; }
     if (!radio('eres_mama')) { showAlert('alert-container', 'Por favor selecciona si eres mamá.'); scrollToTop(); return; }
     if (radio('eres_mama') === 'Sí' && !hasWord(val('hijos_detalle'))) { showAlert('alert-container', 'Por favor indica cuántos hijos tienes y sus edades.'); scrollToTop(); return; }
+    if (!radio('postulada_anteriormente')) { showAlert('alert-container', 'Por favor indica si te has postulado anteriormente con nosotros.'); scrollToTop(); return; }
+    if (!radio('trabajado_anteriormente')) { showAlert('alert-container', 'Por favor indica si has trabajado con nosotros anteriormente.'); scrollToTop(); return; }
     if (!radio('grado_estudios')) { showAlert('alert-container', 'Selecciona tu grado de estudios.'); scrollToTop(); return; }
+
+    // Validar detalle de grado de estudios
+    const gradoVal = radio('grado_estudios');
+    if (gradoVal === 'Técnico profesional') {
+        if (!hasWord(val('tecnico_cual'))) { showAlert('alert-container', 'Por favor describe en qué fue tu técnico (no puede estar vacío).'); scrollToTop(); return; }
+    } else if (gradoVal === 'Licenciatura enfocada al desarrollo infantil') {
+        if (!hasWord(val('licenciatura_periodo'))) { showAlert('alert-container', 'Por favor indica el período de tu licenciatura (Ej. 2018 - 2022).'); scrollToTop(); return; }
+    } else if (gradoVal === 'Otra licenciatura') {
+        if (!hasWord(val('otra_licenciatura_cual'))) { showAlert('alert-container', 'Por favor indica cuál es tu licenciatura.'); scrollToTop(); return; }
+        if (!hasWord(val('otra_licenciatura_periodo'))) { showAlert('alert-container', 'Por favor indica el período de tu licenciatura (Ej. 2018 - 2022).'); scrollToTop(); return; }
+    } else if (gradoVal === 'Maestría') {
+        if (!hasWord(val('maestria_cual'))) { showAlert('alert-container', 'Por favor indica cuál es tu maestría.'); scrollToTop(); return; }
+        if (!hasWord(val('maestria_periodo'))) { showAlert('alert-container', 'Por favor indica el período de tu maestría (Ej. 2020 - 2022).'); scrollToTop(); return; }
+    } else if (gradoVal === 'Actualmente estudiando') {
+        if (!hasWord(val('estudiando_que'))) { showAlert('alert-container', 'Por favor indica qué estás estudiando.'); scrollToTop(); return; }
+        if (!hasWord(val('estudiando_semestre'))) { showAlert('alert-container', 'Por favor indica en qué semestre o cuatrimestre estás.'); scrollToTop(); return; }
+        if (!hasWord(val('estudiando_horarios'))) { showAlert('alert-container', 'Por favor indica tus horarios y días de clase.'); scrollToTop(); return; }
+        // Prácticas (solo si aplica)
+        if (radio('en_practicas') === 'Sí' && radio('practicas_pequenitos') === 'Sí') {
+            if (!hasWord(val('practicas_donde'))) { showAlert('alert-container', 'Por favor indica dónde realizas tus prácticas.'); scrollToTop(); return; }
+            if (!hasWord(val('practicas_fechas'))) { showAlert('alert-container', 'Por favor indica las fechas de tus prácticas.'); scrollToTop(); return; }
+            if (!hasWord(val('practicas_horarios'))) { showAlert('alert-container', 'Por favor indica los días y horarios de tus prácticas.'); scrollToTop(); return; }
+        }
+    }
 
     // Validar zona
     if (ciudad === 'Puebla') {
         if (!radio('zona_ciudad')) { showAlert('alert-container', 'Selecciona tu zona de ubicación.'); scrollToTop(); return; }
+        if (radio('zona_ciudad') === 'Otra' && !hasWord(val('zona_otra_cual'))) { showAlert('alert-container', 'Por favor indica tu colonia o zona en Puebla.'); scrollToTop(); return; }
     } else if (ciudad === 'Querétaro') {
         if (!radio('zona_ciudad_qro')) { showAlert('alert-container', 'Selecciona tu zona de ubicación.'); scrollToTop(); return; }
+        if (radio('zona_ciudad_qro') === 'Otra' && !hasWord(val('zona_otra_cual_qro'))) { showAlert('alert-container', 'Por favor indica tu colonia o zona en Querétaro.'); scrollToTop(); return; }
     } else if (ciudad === 'Xalapa') {
         if (!radio('zona_ciudad_xal')) { showAlert('alert-container', 'Selecciona tu zona de ubicación.'); scrollToTop(); return; }
+        if (radio('zona_ciudad_xal') === 'Otra' && !hasWord(val('zona_otra_cual_xal'))) { showAlert('alert-container', 'Por favor indica tu colonia o zona en Xalapa.'); scrollToTop(); return; }
     } else if (ciudad === 'CDMX') {
         if (!radio('zona_ciudad_cdmx')) { showAlert('alert-container', 'Selecciona tu zona de ubicación.'); scrollToTop(); return; }
+        if (radio('zona_ciudad_cdmx') === 'Otra' && !hasWord(val('zona_otra_cual_cdmx'))) { showAlert('alert-container', 'Por favor indica tu colonia o zona en CDMX.'); scrollToTop(); return; }
     } else {
         if (!hasWord(val('zona_libre'))) { showAlert('alert-container', 'Ingresa tu zona o colonia de ubicación.'); scrollToTop(); return; }
     }
 
     if (!radio('disponibilidad')) { showAlert('alert-container', 'Selecciona tu disponibilidad.'); scrollToTop(); return; }
+    const horarioNeeded = ['Lunes a viernes MEDIO DÍA MAÑANAS', 'Lunes a viernes MEDIO DÍA TARDES', 'FINES DE SEMANA', 'Otro horario'];
+    if (horarioNeeded.includes(radio('disponibilidad')) && !hasWord(val('disp_horario_detalle'))) { showAlert('alert-container', 'Por favor especifica tu horario de disponibilidad.'); scrollToTop(); return; }
     if (!document.querySelector('#exp-checkboxes input:checked')) { showAlert('alert-container', 'Selecciona al menos un tipo de experiencia con peques.'); scrollToTop(); return; }
     if (!val('tiempo_trabajo')) { showAlert('alert-container', 'Selecciona el tiempo que deseas trabajar con nosotras.'); scrollToTop(); return; }
+    if (radio('otras_agencias') === 'Sí' && !hasWord(val('nombre_agencia'))) { showAlert('alert-container', 'Por favor indica el nombre de la agencia donde trabajaste anteriormente.'); scrollToTop(); return; }
 
     // Validar bloques de familia si niñera particular está seleccionada
     if (document.getElementById('cb-ninera')?.checked) {

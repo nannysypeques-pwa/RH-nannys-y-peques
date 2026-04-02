@@ -1553,6 +1553,7 @@
                             <div class="interview-field"><label class="interview-label">Estado de salud</label><select name="estado_salud" class="interview-input"><option value="">-- Selecciona --</option><option ${existingData.estado_salud === 'Excelente' ? 'selected' : ''}>Excelente</option><option ${existingData.estado_salud === 'Bueno' ? 'selected' : ''}>Bueno</option><option ${existingData.estado_salud === 'Regular' ? 'selected' : ''}>Regular</option><option ${existingData.estado_salud === 'Malo' ? 'selected' : ''}>Malo</option></select></div>
                             <div class="interview-field"><label class="interview-label">Medio de transporte</label><input type="text" name="medio_transporte" class="interview-input" value="${existingData.medio_transporte || ''}"></div>
                             <div class="interview-field"><label class="interview-label">¿Te ubicas por la ciudad?</label><input type="text" name="se_ubica_en_ciudad" class="interview-input" value="${existingData.se_ubica_en_ciudad || ''}"></div>
+                            <div class="interview-field full"><label class="interview-label">Comentario extra</label><textarea name="comentario_extra" class="interview-input" rows="2" placeholder="Observaciones adicionales sobre la candidata...">${existingData.comentario_extra || ''}</textarea></div>
                         </div>
                     </div>
 
