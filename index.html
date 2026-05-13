@@ -461,7 +461,72 @@
                 font-size: 2.4rem;
             }
         }
+
+        /* Modal de Atención */
+        #attention-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(61, 26, 42, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+
+        #attention-modal .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--r-xl);
+            box-shadow: var(--shadow-xl);
+            padding: 3rem 2rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border: 2px solid var(--pink-100);
+            animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #attention-modal .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            filter: drop-shadow(0 10px 20px rgba(230, 52, 112, 0.2));
+            animation: pulseAttention 2s infinite;
+        }
+
+        @keyframes pulseAttention {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        #attention-modal .modal-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: var(--pink-500);
+            margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        #attention-modal .modal-text {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: var(--text-h);
+            margin-bottom: 2.5rem;
+            font-weight: 600;
+        }
+
+        #attention-modal .modal-text span.highlight {
+            color: var(--pink-400);
+            font-weight: 900;
+            text-decoration: underline;
+        }
     </style>
+
 </head>
 
 <body>
@@ -501,29 +566,29 @@
         </div>
 
         <div class="cities-grid">
-            <a href="formulario.html?ciudad=Puebla" class="city-card city-puebla" id="btn-puebla">
+            <div onclick="openAttentionModal('Puebla')" class="city-card city-puebla" id="btn-puebla" role="button" tabindex="0">
                 <span class="city-emoji">🏛️</span>
                 <span class="city-name">Puebla</span>
                 <span class="city-cta">Postularme →</span>
-            </a>
+            </div>
 
-            <a href="formulario.html?ciudad=Xalapa" class="city-card city-xalapa" id="btn-xalapa">
+            <div onclick="openAttentionModal('Xalapa')" class="city-card city-xalapa" id="btn-xalapa" role="button" tabindex="0">
                 <span class="city-emoji">☕</span>
                 <span class="city-name">Xalapa</span>
                 <span class="city-cta">Postularme →</span>
-            </a>
+            </div>
 
-            <a href="formulario.html?ciudad=Querétaro" class="city-card city-queretaro" id="btn-queretaro">
+            <div onclick="openAttentionModal('Querétaro')" class="city-card city-queretaro" id="btn-queretaro" role="button" tabindex="0">
                 <span class="city-emoji">🌸</span>
                 <span class="city-name">Querétaro</span>
                 <span class="city-cta">Postularme →</span>
-            </a>
+            </div>
 
-            <a href="formulario.html?ciudad=CDMX" class="city-card city-cdmx" id="btn-cdmx">
+            <div onclick="openAttentionModal('CDMX')" class="city-card city-cdmx" id="btn-cdmx" role="button" tabindex="0">
                 <span class="city-emoji">🌆</span>
                 <span class="city-name">CDMX</span>
                 <span class="city-cta">Postularme →</span>
-            </a>
+            </div>
         </div>
 
         <!-- Footer con acceso reclutadoras -->
@@ -593,12 +658,46 @@
                 document.body.style.overflow = 'auto';
             }
 
-            // Cerrar al hacer clic fuera del contenido
+            let selectedCity = '';
+
+            function openAttentionModal(city) {
+                selectedCity = city;
+                document.getElementById('attention-modal').style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeAttentionModal() {
+                document.getElementById('attention-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+
+            function proceedToForm() {
+                if (selectedCity) {
+                    window.location.href = `formulario.html?ciudad=${selectedCity}`;
+                }
+            }
+
+            // Cerrar al hacer clic fuera del contenido (para ambos modales)
             window.onclick = function (event) {
-                const modal = document.getElementById('motivational-modal');
-                if (event.target == modal) closeMotivation();
+                const motivationalModal = document.getElementById('motivational-modal');
+                const attentionModal = document.getElementById('attention-modal');
+                
+                if (event.target == motivationalModal) closeMotivation();
+                if (event.target == attentionModal) closeAttentionModal();
             }
         </script>
+
+        <!-- Modal de Atención -->
+        <div id="attention-modal">
+            <div class="modal-content">
+                <span class="modal-icon">📢</span>
+                <h2 class="modal-title">ATENCIÓN</h2>
+                <div class="modal-text">
+                    Estás a un paso de postularte y formar parte de nuestro equipo. Te pedimos comentar a <span class="highlight">DETALLE</span> y con precisión cada una de tus experiencias con pequeñitos, ya que es el criterio principal para poder dar continuidad, gracias.
+                </div>
+                <button class="btn btn-primary btn-lg w-full" onclick="proceedToForm()">Aceptar</button>
+            </div>
+        </div>
 </body>
 
 </html>
