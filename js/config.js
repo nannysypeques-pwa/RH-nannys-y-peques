@@ -38,6 +38,9 @@ async function apiGet(params) {
     const session = getSession();
     const finalParams = { ...params };
     if (session && session.token) finalParams.token = session.token;
+    
+    // Evitar que el navegador almacene en caché los datos (cache-buster)
+    finalParams._t = Date.now();
 
     Object.entries(finalParams).forEach(([k, v]) => url.searchParams.append(k, v));
     const res = await fetch(url.toString());
