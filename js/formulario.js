@@ -401,6 +401,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ── SUBMIT ──
     document.getElementById('candidata-form').addEventListener('submit', handleSubmit);
+
+    // ── OBSERVADOR DE SCROLL PARA MOSTRAR EXPERIENCIAS VÁLIDAS ──
+    const secExp = document.getElementById('seccion-experiencia');
+    if (secExp) {
+        let experienceModalShown = false;
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Se activa si entra al menos un 15% en el viewport
+                if (entry.isIntersecting && !experienceModalShown) {
+                    experienceModalShown = true;
+                    showExperiencesModal();
+                    observer.unobserve(secExp); // Dejar de observar tras mostrarse una vez
+                }
+            });
+        }, {
+            threshold: 0.15
+        });
+        observer.observe(secExp);
+    }
 });
 
 // ─── Recopilar datos ─────────────────────────────────────────
@@ -704,3 +723,34 @@ async function handleSubmit(e) {
 }
 
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+// ── LÓGICA DEL MODAL DE EXPERIENCIAS VÁLIDAS ──
+function showExperiencesModal() {
+    const modal = document.getElementById('experiences-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Bloquear scroll del fondo
+    }
+}
+
+// Hacer que sea accesible globalmente para los botones con onclick
+window.showExperiencesModal = showExperiencesModal;
+
+function closeExperiencesModal() {
+    const modal = document.getElementById('experiences-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Habilitar scroll de nuevo
+    }
+}
+
+// Hacer que sea accesible globalmente para los botones con onclick
+window.closeExperiencesModal = closeExperiencesModal;
+
+// Cerrar al hacer clic en el overlay exterior del modal
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('experiences-modal');
+    if (event.target === modal) {
+        closeExperiencesModal();
+    }
+});

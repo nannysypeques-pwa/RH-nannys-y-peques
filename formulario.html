@@ -190,6 +190,81 @@
                 grid-template-columns: 1fr
             }
         }
+
+        /* Estilos para el Grid de Experiencias */
+        .experiences-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+        @media (max-width: 480px) {
+            .experiences-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .exp-item {
+            padding: 0.85rem 1.1rem;
+            border-radius: var(--r-md);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-h);
+            transition: all var(--transition);
+            cursor: default;
+        }
+        .exp-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        .exp-item .exp-emoji {
+            font-size: 1.25rem;
+        }
+        .exp-item.pink {
+            background: var(--pink-50);
+            border: 1px solid var(--pink-100);
+        }
+        .exp-item.pink:hover {
+            border-color: var(--pink-300);
+            background: var(--pink-100);
+        }
+        .exp-item.blue {
+            background: var(--blue-50);
+            border: 1px solid var(--blue-100);
+        }
+        .exp-item.blue:hover {
+            border-color: var(--blue-300);
+            background: var(--blue-100);
+        }
+        .exp-item.yellow {
+            background: var(--yellow-50);
+            border: 1px solid var(--yellow-100);
+        }
+        .exp-item.yellow:hover {
+            border-color: var(--yellow-300);
+            background: var(--yellow-100);
+        }
+        .exp-item.rainbow {
+            background: linear-gradient(135deg, rgba(255, 133, 172, 0.08), rgba(116, 194, 224, 0.08), rgba(253, 203, 110, 0.08));
+            border: 2px dashed var(--pink-200);
+            grid-column: span 2;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--pink-500);
+        }
+        .exp-item.rainbow:hover {
+            border-style: solid;
+            border-color: var(--pink-400);
+            background: linear-gradient(135deg, rgba(255, 133, 172, 0.15), rgba(116, 194, 224, 0.15), rgba(253, 203, 110, 0.15));
+            transform: scale(1.02);
+        }
+        @media (max-width: 480px) {
+            .exp-item.rainbow {
+                grid-column: span 1;
+            }
+        }
     </style>
 </head>
 
@@ -684,7 +759,7 @@
                 </div>
 
                 <!-- ═══ SECCIÓN 5: EXPERIENCIA ═══ -->
-                <div class="form-card">
+                <div class="form-card" id="seccion-experiencia">
                     <div class="sec-hdr"><span class="sec-emoji">👶</span>
                         <div>
                             <div class="sec-title">Tu experiencia con peques</div>
@@ -1019,6 +1094,70 @@
 
         </div>
     </main>
+
+    <!-- Modal de Experiencias Válidas -->
+    <div id="experiences-modal" class="modal-overlay" style="display: none; z-index: 4000;">
+        <div class="modal" style="max-width: 550px; background: rgba(255, 255, 255, 0.98); border: 2px solid var(--pink-200);">
+            <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <h2 style="font-size: 1.5rem; background: linear-gradient(135deg, var(--pink-500), var(--blue-500)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">
+                    ✨ Experiencias válidas para nosotros
+                </h2>
+                <button class="btn-close" onclick="closeExperiencesModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding-top: 1rem; padding-bottom: 1.5rem;">
+                <p style="font-size: 0.95rem; color: var(--text-body); margin-bottom: 1.2rem; font-weight: 600; line-height: 1.6;">
+                    Querida Nanny, para nosotros es muy importante conocer toda tu trayectoria. 💖 Aquí te recordamos las experiencias que <strong>sí son válidas</strong> para tu postulación:
+                </p>
+                <div class="experiences-grid">
+                    <div class="exp-item pink">
+                        <span class="exp-emoji">🏠</span>
+                        <span>Niñera particular</span>
+                    </div>
+                    <div class="exp-item blue">
+                        <span class="exp-emoji">🏫</span>
+                        <span>Estancias, guarderías o escuela</span>
+                    </div>
+                    <div class="exp-item yellow">
+                        <span class="exp-emoji">💚</span>
+                        <span>Voluntariados</span>
+                    </div>
+                    <div class="exp-item pink">
+                        <span class="exp-emoji">⛺</span>
+                        <span>Campamentos</span>
+                    </div>
+                    <div class="exp-item blue">
+                        <span class="exp-emoji">☀️</span>
+                        <span>Cursos de verano</span>
+                    </div>
+                    <div class="exp-item yellow">
+                        <span class="exp-emoji">📝</span>
+                        <span>Servicio Social o Prácticas</span>
+                    </div>
+                    <div class="exp-item pink">
+                        <span class="exp-emoji">✍️</span>
+                        <span>Club de tareas</span>
+                    </div>
+                    <div class="exp-item blue">
+                        <span class="exp-emoji">🧩</span>
+                        <span>Regularización</span>
+                    </div>
+                    <div class="exp-item yellow">
+                        <span class="exp-emoji">📖</span>
+                        <span>Clases particulares</span>
+                    </div>
+                    <div class="exp-item rainbow">
+                        <span class="exp-emoji">✨</span>
+                        <span>¡Toda experiencia con peques es bienvenida!</span>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <button class="btn btn-primary" onclick="closeExperiencesModal()" style="width: 100%; padding: 0.9rem; font-size: 1rem;">
+                        Entendido, ¡gracias! 💕
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
