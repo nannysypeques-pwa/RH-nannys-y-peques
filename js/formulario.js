@@ -231,9 +231,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Verificar si ya se registró
     if (checkPreviousRegistration()) return;
 
-    // Máscaras de teléfono
+    // Máscaras de teléfono y edad
     setupPhoneMask('tel_principal');
     setupPhoneMask('tel_alternativo');
+    const edadInput = document.getElementById('edad');
+    if (edadInput) {
+        edadInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    }
 
     // Zona adaptada por ciudad
     if (ciudad === 'Puebla') {
@@ -570,6 +576,9 @@ async function handleSubmit(e) {
     if (!hasWord(nombre)) { showAlert('alert-container', 'Por favor ingresa tu nombre completo (no puede estar vacío).'); scrollToTop(); return; }
     if (!email || !email.includes('@')) { showAlert('alert-container', 'Ingresa un correo electrónico válido.'); scrollToTop(); return; }
     if (!tel || tel.replace(/\D/g, '').length < 10) { showAlert('alert-container', 'Ingresa un teléfono válido de 10 dígitos.'); scrollToTop(); return; }
+    const edadStr = val('edad');
+    const edadNum = parseInt(edadStr, 10);
+    if (!edadStr || isNaN(edadNum) || edadNum < 18 || edadNum > 65) { showAlert('alert-container', 'Por favor ingresa una edad válida entre 18 y 65 años.'); scrollToTop(); return; }
     if (!radio('eres_mama')) { showAlert('alert-container', 'Por favor selecciona si eres mamá.'); scrollToTop(); return; }
     if (radio('eres_mama') === 'Sí' && !hasWord(val('hijos_detalle'))) { showAlert('alert-container', 'Por favor indica cuántos hijos tienes y sus edades.'); scrollToTop(); return; }
     if (!radio('postulada_anteriormente')) { showAlert('alert-container', 'Por favor indica si te has postulado anteriormente con nosotros.'); scrollToTop(); return; }

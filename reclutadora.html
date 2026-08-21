@@ -892,6 +892,49 @@
             font-size: 0.88rem;
             cursor: pointer;
         }
+
+        /* Ficha con recomendación de rechazo automático */
+        .candidata-card.auto-reject-card {
+            animation: pulse-border-red 2s infinite;
+            border-width: 2px !important;
+        }
+
+        @keyframes pulse-border-red {
+            0% {
+                border-color: rgba(220, 53, 69, 0.3);
+                border-left-color: rgba(220, 53, 69, 0.3) !important;
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.2), var(--shadow-sm);
+            }
+            50% {
+                border-color: rgba(220, 53, 69, 1);
+                border-left-color: rgba(220, 53, 69, 1) !important;
+                box-shadow: 0 0 0 6px rgba(220, 53, 69, 0.25), var(--shadow-md);
+            }
+            100% {
+                border-color: rgba(220, 53, 69, 0.3);
+                border-left-color: rgba(220, 53, 69, 0.3) !important;
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.2), var(--shadow-sm);
+            }
+        }
+        /* Estilo para el input interactivo de entrevista en las tarjetas */
+        .edit-interview-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed currentColor;
+            outline: none;
+            font-weight: 700;
+            color: inherit;
+            font-family: inherit;
+            font-size: 0.78rem;
+            cursor: pointer;
+            padding: 0;
+            width: 90px;
+            text-align: left;
+        }
+        .edit-interview-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -1092,6 +1135,12 @@
         let SESSION = null;
         let TODAS_CANDIDATAS = [];
 
+        // Helper para normalizar textos para comparación (quita acentos, minúsculas, espacios)
+        function normalizeText(text) {
+            if (!text) return '';
+            return text.toString().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
         // Helper para parsear fecha de Sheets (soporta ISO, epoch numérico, dd/MM/yyyy, dd/MM/yy)
         function parseSheetDate(str) {
             if (!str || str === '-') return null;
@@ -1138,6 +1187,18 @@
             if (e.startsWith('capacitad')) return 'capacitada';
             if (e.startsWith('whatsapp')) return 'whatsapp';
             return e;
+        }
+
+        let LAST_LOCAL_UPDATE_TIME = 0;
+        let LAST_SEGUIMIENTO_UPDATE_TIME = 0;
+
+        function saveCandidatasCache() {
+            LAST_LOCAL_UPDATE_TIME = Date.now();
+            LAST_SEGUIMIENTO_UPDATE_TIME = Date.now();
+            if (window.SESSION && SESSION.email) {
+                const cacheKey = `cache_candidatas_${SESSION.email}`;
+                localStorage.setItem(cacheKey, JSON.stringify(TODAS_CANDIDATAS));
+            }
         }
 
         let currentFilter = 'todos';
@@ -1290,6 +1351,8 @@
                     </div>`;
             }
 
+            const requestTime = Date.now();
+
             try {
                 // 2. Carga Global: Siempre descargar todo lo permitido para mantener actualizado
                 // El backend ignora 'ciudad' si mandamos vacío y devuelve todas las permitidas
@@ -1301,6 +1364,10 @@
                 });
 
                 if (result.success) {
+                    if (LAST_LOCAL_UPDATE_TIME > requestTime) {
+                        console.log("Ignorando respuesta de red obsoleta en loadCandidatas para evitar sobrescribir cambios locales más nuevos");
+                        return;
+                    }
                     TODAS_CANDIDATAS = result.data || [];
                     // Actualizar Cache
                     localStorage.setItem(cacheKey, JSON.stringify(TODAS_CANDIDATAS));
@@ -1404,6 +1471,35 @@
                     if (candidata) openModal(candidata);
                 });
             });
+
+            // Inicializar Flatpickr para el campo entrevista en las fichas
+            flatpickr(".fp-card-entrevista", {
+                locale: "es",
+                enableTime: true,
+                noCalendar: false,
+                dateFormat: "d/m H:i",
+                time_24hr: true,
+                onChange: function (selectedDates, dateStr, instance) {
+                    const email = instance.element.dataset.email;
+                    updateTrackField(email, 'agendo_entrevista', dateStr);
+                },
+                onReady: function (selectedDates, dateStr, instance) {
+                    if (instance.calendarContainer.querySelector('.flatpickr-clear-btn')) return;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'flatpickr-clear-btn';
+                    btn.textContent = 'Eliminar entrevista';
+                    btn.style.cssText = 'width: 100%; padding: 8px; border: none; background: #ef4444; color: #fff; font-weight: bold; cursor: pointer; border-radius: 0 0 4px 4px; font-size: 0.8rem; text-align: center; margin-top: 5px;';
+                    btn.addEventListener('click', async function() {
+                        instance.clear();
+                        instance.close();
+                        const email = instance.element.dataset.email;
+                        await updateTrackField(email, 'agendo_entrevista', '-');
+                        await updateTrackField(email, 'asistencia_entrevista', 'No');
+                    });
+                    instance.calendarContainer.appendChild(btn);
+                }
+            });
         }
 
 
@@ -1436,10 +1532,54 @@
                 }
 
                 sessionText = `${dName} ${d}/${m}${timeStr}`;
-                sessionColor = 'var(--blue-500)';
+                sessionColor = c.asistencia_platica === 'Sí' ? 'var(--green-mid)' : 'var(--blue-500)';
             } else if (c.dia_sesion) {
                 sessionText = `${c.dia_sesion}${c.hora_sesion ? ' a las ' + c.hora_sesion : ''}`;
-                sessionColor = 'var(--blue-500)';
+                sessionColor = c.asistencia_platica === 'Sí' ? 'var(--green-mid)' : 'var(--blue-500)';
+            }
+
+            // Formatear información de la entrevista
+            let interviewHtml = '';
+            const hasInterview = c.agendo_entrevista && c.agendo_entrevista !== '-';
+            
+            if (hasInterview) {
+                const interviewColor = c.asistencia_entrevista === 'Sí' ? 'var(--green-mid)' : '#eab308';
+                if (estado === 'aceptado') {
+                    interviewHtml = `
+                    <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:${interviewColor}" onclick="event.stopPropagation();">
+                      <span style="font-size:0.9rem">🤝</span>
+                      <span style="display:inline-flex;align-items:center;gap:0.25rem;">
+                        <span>Entrevista:</span>
+                        <input type="text" class="fp-card-entrevista edit-interview-input" 
+                               value="${c.agendo_entrevista}" 
+                               data-email="${c.email}"
+                               readonly>
+                      </span>
+                      <input type="checkbox" style="width:14px;height:14px;cursor:pointer;margin-left:auto" 
+                             title="Marcar asistencia a entrevista"
+                             ${c.asistencia_entrevista === 'Sí' ? 'checked' : ''} 
+                             onchange="updateTrackField('${c.email}', 'asistencia_entrevista', this.checked ? 'Sí' : 'No')">
+                    </span>
+                    `;
+                } else {
+                    interviewHtml = `
+                    <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:${interviewColor}">
+                      <span style="font-size:0.9rem">🤝</span>
+                      <span>Entrevista: ${c.agendo_entrevista}</span>
+                    </span>
+                    `;
+                }
+            } else if (estado === 'aceptado') {
+                interviewHtml = `
+                <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:var(--text-muted)" onclick="event.stopPropagation();">
+                  <span style="font-size:0.9rem">🤝</span>
+                  <input type="text" class="fp-card-entrevista edit-interview-input" 
+                         placeholder="Sin entrevista"
+                         value="" 
+                         data-email="${c.email}"
+                         readonly>
+                </span>
+                `;
             }
 
             // Lógica de alerta por 6 meses en WhatsApp
@@ -1455,9 +1595,47 @@
                 }
             }
 
+            // Evaluar criterios de rechazo automático
+            const edad = parseInt(c.edad, 10);
+            const esMayor36 = !isNaN(edad) && edad > 36;
+
+            const gradoNorm = normalizeText(c.grado_estudios);
+            const tieneGradoFiltro = (gradoNorm === 'secundaria' || gradoNorm === 'bachiller/preparatoria');
+            
+            const tieneExpFamiliar = normalizeText(c.exp_familia_propia) === 'si';
+            const tieneExpParticular = normalizeText(c.exp_ninera_particular) === 'si';
+            const tieneExpGuarderia = normalizeText(c.exp_guarderia) === 'si';
+            const tieneExpEscuela = normalizeText(c.exp_escuela) === 'si';
+            const tieneExpServicio = normalizeText(c.exp_servicio_social) === 'si';
+            const tieneExpPractica = normalizeText(c.exp_practica_prof) === 'si';
+            const tieneExpVoluntariado = normalizeText(c.exp_voluntariado) === 'si';
+            const tieneExpCampamentos = normalizeText(c.exp_campamentos) === 'si';
+            const tieneExpClases = normalizeText(c.exp_clases_particulares) === 'si';
+            const tieneExpHospital = normalizeText(c.exp_hospitalaria) === 'si';
+
+            const tieneOtrasExperiencias = tieneExpParticular || tieneExpGuarderia || tieneExpEscuela || 
+                                           tieneExpServicio || tieneExpPractica || tieneExpVoluntariado || 
+                                           tieneExpCampamentos || tieneExpClases || tieneExpHospital;
+
+            const soloExpFamiliar = tieneExpFamiliar && !tieneOtrasExperiencias;
+            const cumpleCaso2 = tieneGradoFiltro && soloExpFamiliar;
+
+            const cFiltroAutomatico = esMayor36 || cumpleCaso2;
+
+            let autoRejectClass = '';
+            let autoRejectTitle = '';
+            if (estado === 'pendiente' && cFiltroAutomatico) {
+                autoRejectClass = 'auto-reject-card';
+                let reasons = [];
+                if (esMayor36) reasons.push(`Edad mayor a 36 años (${edad} años)`);
+                if (cumpleCaso2) reasons.push(`Estudios (${c.grado_estudios}) + Solo experiencia familiar`);
+                autoRejectTitle = `Rechazo automático recomendado: ${reasons.join(' y ')}`;
+            }
+
             return `
-  <div class="candidata-card estado-${estado} ${alertClass}"
-       data-idx="${c.rowIndex}" data-ciudad="${c.ciudad}">
+  <div class="candidata-card estado-${estado} ${alertClass} ${autoRejectClass}"
+       data-idx="${c.rowIndex}" data-ciudad="${c.ciudad}"
+       ${autoRejectTitle ? `title="${autoRejectTitle}"` : ''}>
     <div class="card-top">
       <div>
         <div class="card-name">${c.nombre || '—'}</div>
@@ -1481,9 +1659,7 @@
     <div style="font-size:0.78rem;color:var(--text-muted);display:flex;flex-direction:column;gap:0.2rem;margin-top:0;margin-bottom:0;">
       ${c.disponibilidad ? '<span style="display:flex;align-items:flex-start;gap:0.4rem"><span style="font-size:0.9rem;line-height:1.2">🕐</span> <span style="line-height:1.3">' + c.disponibilidad + '</span></span>' : ''}
       <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:${sessionColor}"><span style="font-size:0.9rem">📅</span> <span>${sessionText}</span></span>
-      ${c.agendo_entrevista && c.agendo_entrevista !== '-' ? `
-      <span style="display:flex;align-items:center;gap:0.4rem;font-weight:700;color:${c.asistencia_entrevista === 'Sí' ? 'var(--green-mid)' : '#eab308'}"><span style="font-size:0.9rem">🤝</span> <span>Entrevista: ${c.agendo_entrevista}</span></span>
-      ` : ''}
+      ${interviewHtml}
     </div>
     <div class="card-footer" style="padding-top:0.6rem;border-top:1px solid rgba(0,0,0,0.04);display:flex;justify-content:${(estado === 'aceptado' || estado === 'capacitada') ? 'space-between' : 'flex-end'};align-items:center;">
       ${estado === 'aceptado' ? `<div><button class="btn btn-sm btn-primary" style="padding:0.2rem 0.6rem;font-size:0.75rem" onclick="event.stopPropagation(); updateStatusDirect(this, '${c.ciudad}', ${c.rowIndex}, 'capacitada')">⭐ Capacitada</button></div>` : ''}
@@ -1906,36 +2082,53 @@
             let html = '';
 
             // Nota si ya fue revisada
+            html += `<div class="reviewed-note">`;
             if (estado !== 'pendiente') {
-                html += `<div class="reviewed-note">
-                  <div>Candidata revisada por: <strong>${c.revisada_por || '—'}</strong> · ${c.fecha_revision || '—'}</div>
-                  ${c.justificacion ? `<div style="margin-top:.4rem;font-style:italic;border-top:1px solid rgba(0,0,0,0.05);padding-top:.4rem">" ${c.justificacion} "</div>` : ''}
-                  ${estado === 'aceptado' ? `
-                  <div style="margin-top:.8rem;border-top:1px solid rgba(0,0,0,0.07);padding-top:.7rem">
-                    <div style="font-weight:700;font-size:.8rem;color:var(--text-muted);margin-bottom:.4rem">📝 Notas del reclutador</div>
-                    <textarea id="nota-reclutadora" rows="3"
-                      style="width:100%;box-sizing:border-box;border:1px solid var(--pink-200);border-radius:var(--r-md);padding:.5rem .7rem;font-size:.83rem;font-family:inherit;resize:vertical;outline:none;transition:border .2s"
-                      placeholder="Agrega notas sobre el proceso de esta candidata..."
-                      onfocus="this.style.borderColor='var(--pink-400)'"
-                      onblur="this.style.borderColor='var(--pink-200)'"
-                    >${c.notas_reclutadora || ''}</textarea>
-                    <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
-                      <button id="btn-guardar-nota" class="btn btn-outline" style="font-size:.78rem;padding:.3rem .8rem">
-                        💾 Guardar nota
-                      </button>
-                      <span id="nota-status" style="font-size:.75rem;color:var(--text-muted)"></span>
-                    </div>
-                  </div>
-                  ` : ''}
-                </div>`;
+                html += `<div>Candidata revisada por: <strong>${c.revisada_por || '—'}</strong> · ${c.fecha_revision || '—'}</div>
+                  ${c.justificacion ? `<div style="margin-top:.4rem;font-style:italic;border-top:1px solid rgba(0,0,0,0.05);padding-top:.4rem">" ${c.justificacion} "</div>` : ''}`;
+            } else {
+                html += `<div style="color:var(--text-muted);font-style:italic;font-size:.78rem">Candidata pendiente de revisión</div>`;
             }
+            html += `<div style="margin-top:.8rem;border-top:1px solid rgba(0,0,0,0.07);padding-top:.7rem">
+                <div style="font-weight:700;font-size:.8rem;color:var(--text-muted);margin-bottom:.4rem">📝 Notas del reclutador</div>
+                <textarea id="nota-reclutadora" rows="3"
+                  style="width:100%;box-sizing:border-box;border:1px solid var(--pink-200);border-radius:var(--r-md);padding:.5rem .7rem;font-size:.83rem;font-family:inherit;resize:vertical;outline:none;transition:border .2s"
+                  placeholder="Agrega notas sobre el proceso de esta candidata..."
+                  onfocus="this.style.borderColor='var(--pink-400)'"
+                  onblur="this.style.borderColor='var(--pink-200)'"
+                >${c.notas_reclutadora || ''}</textarea>
+                <div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem">
+                  <button id="btn-guardar-nota" class="btn btn-outline" style="font-size:.78rem;padding:.3rem .8rem">
+                    💾 Guardar nota
+                  </button>
+                  <span id="nota-status" style="font-size:.75rem;color:var(--text-muted)"></span>
+                </div>
+              </div>
+            </div>`;
 
             // ═══ 1. DATOS PERSONALES ═══
             html += `<div class="detail-section">${secTitle('👩', 'Datos Personales')}<div class="detail-grid">`;
             html += di('Nombre completo', c.nombre);
             html += di('Edad', c.edad + ' años');
             html += di('Email', c.email);
-            html += di('Teléfono principal', c.telefono_principal);
+            html += `
+              <div class="detail-item">
+                <div class="detail-label">Teléfono principal</div>
+                <div id="tel-principal-container" style="display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%">
+                  <span id="tel-principal-value" class="detail-value">${c.telefono_principal || '—'}</span>
+                  <button type="button" onclick="enableTelPrincipalEdit()" 
+                          style="background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;opacity:0.6;transition:opacity 0.2s"
+                          onmouseover="this.style.opacity='1'"
+                          onmouseout="this.style.opacity='0.6'"
+                          title="Editar teléfono">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--pink-400)">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            `;
             html += di('Teléfono alternativo', c.telefono_alternativo);
             html += di('¿Es mamá?', c.eres_mama);
             if (c.eres_mama === 'Sí' && c.hijos_detalle) {
@@ -2190,6 +2383,7 @@
                             c.dia_sesion = dia;
                             c.hora_sesion = hora;
 
+                            saveCandidatasCache();
                             renderCandidatas();
 
                             document.getElementById('modal-overlay').classList.add('hidden');
@@ -2225,6 +2419,7 @@
                             // Actualizar en memoria
                             const idx = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
                             if (idx >= 0) TODAS_CANDIDATAS[idx].notas_reclutadora = nota;
+                            saveCandidatasCache();
                             notaStatus.textContent = '✅ Guardada';
                             notaStatus.style.color = 'var(--green-mid)';
                         } else {
@@ -2249,6 +2444,158 @@
                 if (e.target === document.getElementById('modal-overlay')) {
                     document.getElementById('modal-overlay').classList.add('hidden');
                 }
+            }
+        }
+
+        // ─── EDICIÓN DE TELÉFONO PRINCIPAL EN LÍNEA ───
+        function formatPhoneInput(input) {
+            let value = input.value.replace(/\D/g, ''); // Solo números
+            if (value.length > 10) value = value.slice(0, 10);
+
+            let formatted = '';
+            if (value.length > 0) {
+                formatted = value.slice(0, 3);
+                if (value.length > 3) {
+                    formatted += ' ' + value.slice(3, 6);
+                }
+                if (value.length > 6) {
+                    formatted += ' ' + value.slice(6, 10);
+                }
+            }
+            input.value = formatted;
+        }
+
+        function enableTelPrincipalEdit() {
+            const container = document.getElementById('tel-principal-container');
+            if (!container || !currentCandidataRow) return;
+
+            const valSpan = document.getElementById('tel-principal-value');
+            const currentVal = valSpan ? valSpan.textContent.trim() : '';
+
+            container.innerHTML = `
+              <div style="display:flex;align-items:center;gap:.4rem;width:100%">
+                <input type="text" id="input-edit-tel-principal" value="${currentVal === '—' ? '' : currentVal}" 
+                       style="flex:1;border:1px solid var(--pink-200);border-radius:4px;padding:0.25rem 0.4rem;font-size:0.83rem;font-family:inherit;outline:none;background:#fff;color:var(--text-body)"
+                       onkeydown="if(event.key==='Enter') saveTelPrincipalEdit(); else if(event.key==='Escape') cancelTelPrincipalEdit();" />
+                <button type="button" onclick="saveTelPrincipalEdit()" style="background:none;border:none;cursor:pointer;padding:2px;font-size:0.9rem;display:flex;align-items:center" title="Guardar">
+                  ✅
+                </button>
+                <button type="button" onclick="cancelTelPrincipalEdit()" style="background:none;border:none;cursor:pointer;padding:2px;font-size:0.9rem;display:flex;align-items:center" title="Cancelar">
+                  ❌
+                </button>
+              </div>
+            `;
+
+            // Focus on the input and select text
+            const input = document.getElementById('input-edit-tel-principal');
+            if (input) {
+                input.focus();
+                input.select();
+                // Formatear en tiempo real
+                input.addEventListener('input', () => formatPhoneInput(input));
+                // Formatear valor inicial si lo hay
+                formatPhoneInput(input);
+            }
+        }
+
+        function cancelTelPrincipalEdit() {
+            if (!currentCandidataRow) return;
+            const tel = currentCandidataRow.telefono_principal || '—';
+            restoreTelPrincipalView(tel);
+        }
+
+        function restoreTelPrincipalView(telefonoVal) {
+            const container = document.getElementById('tel-principal-container');
+            if (!container) return;
+
+            container.innerHTML = `
+              <span id="tel-principal-value" class="detail-value">${telefonoVal || '—'}</span>
+              <button type="button" onclick="enableTelPrincipalEdit()" 
+                      style="background:none;border:none;padding:2px;cursor:pointer;display:flex;align-items:center;opacity:0.6;transition:opacity 0.2s"
+                      onmouseover="this.style.opacity='1'"
+                      onmouseout="this.style.opacity='0.6'"
+                      title="Editar teléfono">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--pink-400)">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </button>
+            `;
+        }
+
+        async function saveTelPrincipalEdit() {
+            const input = document.getElementById('input-edit-tel-principal');
+            if (!input || !currentCandidataRow) return;
+
+            const newVal = input.value.trim();
+            const oldVal = currentCandidataRow.telefono_principal || '';
+
+            if (newVal === oldVal) {
+                restoreTelPrincipalView(oldVal || '—');
+                return;
+            }
+
+            // Validar que tenga exactamente 10 dígitos
+            const digitsOnly = newVal.replace(/\D/g, '');
+            if (digitsOnly.length !== 10) {
+                showToast('El teléfono debe tener 10 dígitos (formato: XXX XXX XXXX)', 'error');
+                input.focus();
+                return;
+            }
+
+            const c = currentCandidataRow;
+            input.disabled = true;
+
+            try {
+                const res = await apiPost({
+                    action: 'updateCandidataField',
+                    ciudad: c.ciudad,
+                    rowIndex: c.rowIndex,
+                    field: 'telefono_principal',
+                    value: newVal
+                });
+
+                if (res.success) {
+                    // Actualizar en memoria local
+                    c.telefono_principal = newVal;
+
+                    // Actualizar en la lista general de candidatas
+                    const idxCan = TODAS_CANDIDATAS.findIndex(x => x.rowIndex == c.rowIndex && x.ciudad === c.ciudad);
+                    if (idxCan >= 0) {
+                        TODAS_CANDIDATAS[idxCan].telefono_principal = newVal;
+                    }
+
+                    // Sincronizar en memoria de seguimiento si aplica
+                    if (c.email) {
+                        const emailKey = c.email.toLowerCase().trim();
+                        
+                        // En la data de Seguimiento
+                        const idxSeg = SEGUIMIENTO_DATA.findIndex(d => (d.email || '').toLowerCase().trim() === emailKey);
+                        if (idxSeg >= 0) {
+                            SEGUIMIENTO_DATA[idxSeg].telefono = newVal;
+                        }
+
+                        // En la lista general de candidatas del seguimiento
+                        const idxCanSeg = TODAS_CANDIDATAS.findIndex(d => (d.email || '').toLowerCase().trim() === emailKey);
+                        if (idxCanSeg >= 0) {
+                            TODAS_CANDIDATAS[idxCanSeg].telefono = newVal;
+                        }
+                    }
+
+                    showToast('Teléfono principal actualizado');
+                    restoreTelPrincipalView(newVal);
+
+                    // Re-renderizar listas para que se refleje el cambio en las vistas de fondo
+                    saveCandidatasCache();
+                    renderCandidatas();
+                    renderSeguimiento();
+                } else {
+                    showToast(res.message || 'Error al actualizar', 'error');
+                    restoreTelPrincipalView(oldVal || '—');
+                }
+            } catch (err) {
+                showToast('Error de conexión al actualizar teléfono', 'error');
+                restoreTelPrincipalView(oldVal || '—');
             }
         }
 
@@ -2296,6 +2643,7 @@
                     document.getElementById('modal-overlay').classList.add('hidden');
                     showToast(`Estado actualizado: ${CONFIG.ESTADO_CONFIG[status].label}`);
                     updateSidebarCounts();
+                    saveCandidatasCache();
                     renderCandidatas();
                 } else if (result.locked) {
                     // Candado: otra reclutadora ya revisó esta candidata
@@ -2308,6 +2656,7 @@
                         TODAS_CANDIDATAS[idx].estado = 'bloqueada'; // Marcamos para que el filtro la oculte
                     }
                     updateSidebarCounts();
+                    saveCandidatasCache();
                     renderCandidatas();
                 } else {
                     showAlert('main-alert', result.message || 'Error al actualizar estado.');
@@ -2353,6 +2702,7 @@
                     }
                     showToast(`Candidata aceptada: ${CONFIG.ESTADO_CONFIG[status].label}`);
                     updateSidebarCounts();
+                    saveCandidatasCache();
                     renderCandidatas();
                 } else {
                     alert(result.message || 'Error al actualizar estado.');
@@ -2451,6 +2801,31 @@
             });
         });
 
+        // Botón de Actualizar lista
+        const refreshBtn = document.getElementById('refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                const originalHtml = refreshBtn.innerHTML;
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = `⏳ Cargando...`;
+                
+                try {
+                    await loadCandidatas(true);
+                    
+                    const secSeguimiento = document.getElementById('sec-seguimiento');
+                    if (secSeguimiento && !secSeguimiento.classList.contains('hidden')) {
+                        await loadSeguimientoData();
+                    }
+                    showToast('Datos actualizados');
+                } catch (err) {
+                    showToast('Error al actualizar datos', 'error');
+                } finally {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = originalHtml;
+                }
+            });
+        }
+
         // ═══════════════════════════════════════════════
         //  MÓDULO DE SEGUIMIENTO
         // ═══════════════════════════════════════════════
@@ -2535,12 +2910,18 @@
             const grid = document.getElementById('seguimiento-grid');
             grid.innerHTML = '<div class="loading-overlay" style="grid-column:1/-1"><div class="spinner"></div><span>Cargando seguimiento...</span></div>';
 
+            const requestTime = Date.now();
+
             try {
                 const result = await apiGet({
                     action: 'getSeguimientoData',
                     ciudad: '' // <--- Vacío para traer TODO el seguimiento global
                 });
                 if (result.success) {
+                    if (LAST_SEGUIMIENTO_UPDATE_TIME > requestTime) {
+                        console.log("Ignorando respuesta de red obsoleta en loadSeguimientoData para evitar sobrescribir cambios locales más nuevos");
+                        return;
+                    }
                     SEGUIMIENTO_DATA = result.data || [];
                     renderSeguimiento();
                 } else {
@@ -2699,6 +3080,22 @@
                 onChange: function (selectedDates, dateStr, instance) {
                     const email = instance.element.dataset.email;
                     updateTrackField(email, 'agendo_entrevista', dateStr);
+                },
+                onReady: function (selectedDates, dateStr, instance) {
+                    if (instance.calendarContainer.querySelector('.flatpickr-clear-btn')) return;
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'flatpickr-clear-btn';
+                    btn.textContent = 'Eliminar entrevista';
+                    btn.style.cssText = 'width: 100%; padding: 8px; border: none; background: #ef4444; color: #fff; font-weight: bold; cursor: pointer; border-radius: 0 0 4px 4px; font-size: 0.8rem; text-align: center; margin-top: 5px;';
+                    btn.addEventListener('click', async function() {
+                        instance.clear();
+                        instance.close();
+                        const email = instance.element.dataset.email;
+                        await updateTrackField(email, 'agendo_entrevista', '-');
+                        await updateTrackField(email, 'asistencia_entrevista', 'No');
+                    });
+                    instance.calendarContainer.appendChild(btn);
                 }
             });
         }
@@ -2708,22 +3105,36 @@
         }
 
         async function updateTrackField(email, field, value) {
+            const emailKey = (email || '').toLowerCase().trim();
+            
+            // 1. Actualizar optimistamente en memoria local (recorriendo todos los registros que coincidan)
+            SEGUIMIENTO_DATA.forEach(d => {
+                if ((d.email || '').toLowerCase().trim() === emailKey) {
+                    d[field] = value;
+                }
+            });
+
+            TODAS_CANDIDATAS.forEach(d => {
+                if ((d.email || '').toLowerCase().trim() === emailKey) {
+                    d[field] = value;
+                }
+            });
+
+            // Re-renderizar de inmediato para respuesta visual instantánea
+            saveCandidatasCache();
+            renderSeguimiento();
+            renderCandidatas();
+
+            // 2. Enviar el cambio al servidor en segundo plano
             try {
                 const result = await apiPost({
                     action: 'updateSeguimiento',
                     email, field, value
                 });
                 if (result.success) {
-                    const idxSeg = SEGUIMIENTO_DATA.findIndex(d => d.email === email);
-                    if (idxSeg >= 0) SEGUIMIENTO_DATA[idxSeg][field] = value;
-
-                    // Sincronizar con la lista global para que los cambios se vean en las fichas
-                    const idxCan = TODAS_CANDIDATAS.findIndex(d => d.email === email);
-                    if (idxCan >= 0) TODAS_CANDIDATAS[idxCan][field] = value;
-
-                    renderSeguimiento();
-                    renderCandidatas();
                     showToast('Seguimiento actualizado');
+                } else {
+                    showToast(result.message || 'Error al actualizar', 'error');
                 }
             } catch (err) {
                 showToast('Error de conexión', 'error');
@@ -2755,6 +3166,7 @@
                     if (idx >= 0) {
                         TODAS_CANDIDATAS[idx].whatsapp_agregada = newValue ? 'Sí' : 'No';
                     }
+                    saveCandidatasCache();
                     showToast(newValue ? 'Marcada como agregada' : 'Marcada como pendiente');
                 } else {
                     showToast(result.message || 'Error al actualizar', 'error');
