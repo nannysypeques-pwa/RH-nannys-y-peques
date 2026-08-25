@@ -32,7 +32,7 @@ const hasWord = str => {
     if (!str) return false;
     // Eliminar espacios y verificar que quede algo con sentido (letras o números)
     const lean = str.trim();
-    if (lean.length < 2) return false;
+    if (lean.length < 1) return false;
     // Regex para verificar que contenga al menos un carácter alfanumérico
     return /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/.test(lean);
 };
